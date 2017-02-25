@@ -11,6 +11,8 @@ Quantum allows users to open, close, and sort as many tabs as they so desire. Us
 Full search and replace is already built-in to Quantum out of the box. Type in your search and Quantum scrolls to the first found text that matches your search or highlights your search red if no match has been found. Users can replace text one by one or all at once.
 ### Syntax Highlighting
 Currently, Quantum supports syntax for all languages listed on the [CodeMirror site](http://codemirror.net/mode/).
+### Tidy Up
+It's what we all fear the most in this world as developers; _messy code_. Luckily with Quantum, users can easily clean up their code with the "tidy up" button in the menu.
 ### Settings
 The settings modal provides 5 key customization options: Themes, Font, Font Size, Tab Size, and Soft Wrap. I wont list all their respective options here as to save space, but they are pretty self-explanatory. These settings were chosen to add a tweakability aspect to Quantum while still incorporating this idea of simplicity that we eagerly strive for.
 
