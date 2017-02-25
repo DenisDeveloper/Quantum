@@ -4,7 +4,7 @@ Quantum is a beautiful material design code editor based off of [atom](https://a
 
 ## Installation
 The installation process depends on the operating system you're in. 
-- If on a **hromebook**, download directly from the chrome webstore [here](https://chrome.google.com/webstore/detail/quantum/hmnlklahndgbhdoclhdnoafhafbhmnkm)
+- If on a **Chromebook**, download directly from the chrome webstore [here](https://chrome.google.com/webstore/detail/quantum/hmnlklahndgbhdoclhdnoafhafbhmnkm)
 - If on a **Mac** or **Windows** computer, Quantum requires you to have Chrome already installed.
   1. Download and unzip the files from the repository
   2. Open up Chrome and head to the extensions manager (More tools > Extensions) or type "chrome://extensions" in the url bar
