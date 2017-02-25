@@ -4,7 +4,7 @@ Quantum is a beautiful material design code editor based off of [atom](https://a
 
 ## Features
 ### Projects
-Definitely one of the more prominent features available in Quantum is the ability to open and manipulate multiple projects. You can open as many projects as you like, but keep in mind there may be a difference in performance. Once openned, users can create a new folder or file within the project as well as remove it from the project or remove it permanently from their drive. 
+Definitely one of the more prominent features available in Quantum is the ability to open and manipulate multiple projects. You can open as many projects as you like, but keep in mind there may be a difference in performance. Once opened, users can create a new folder or file within the project as well as remove it from the project or remove it permanently from their drive. 
 ### Tabs
 Quantum allows users to open, close, and sort as many tabs as they so desire. Users can also rename their documents by clicking on the title in the tab and using the keyboard to type in a different name.
 ### Search
