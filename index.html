@@ -1,0 +1,242 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <link type="text/css" rel="stylesheet" href="assets/window/windowBar.css" />
+    <link type="text/css" rel="stylesheet" href="assets/codemirror/codemirror.css" />
+    <link type="text/css" rel="stylesheet" href="assets/codemirror/addon/fold/foldgutter.css">
+    <link type="text/css" rel="stylesheet" href="assets/css/jquery-ui.css" />
+    <link type="text/css" rel="stylesheet" href="assets/codemirror/themes/material.css" />
+    <link type="text/css" rel='stylesheet' href='assets/codemirror/themes/birds-of-paradise.css'>
+    <link type="text/css" rel='stylesheet' href='assets/codemirror/themes/darkpastel.css'>
+    <link type="text/css" rel='stylesheet' href='assets/codemirror/themes/friendship-bracelet.css'>
+    <link type="text/css" rel='stylesheet' href='assets/codemirror/themes/monokai-sublime.css'>
+    <link type="text/css" rel='stylesheet' href='assets/codemirror/themes/purplenight.css'>
+    <link type="text/css" rel='stylesheet' href='assets/codemirror/themes/tomorrow-night-bright.css'>
+    <link type="text/css" rel='stylesheet' href='assets/codemirror/themes/zenburnesque.css'>
+    <link type="text/css" rel="stylesheet" href="assets/css/main.css" />
+</head>
+
+<body class="preload-body">
+    <div class="preload">
+        <div class="load-bar">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+        <div class="loading-text"></div>
+    </div>
+    <div class="getting-started">
+        <div class="started-title">Welcome to Quantum</div>
+        <div class="started-content"></div>
+        <div class="started-button">Start Now</div>
+    </div>
+    <div class="windowBar"></div>
+    <div class="overflow-menu material-icons">more_vert</div>
+    <div class="tabs"></div>
+    <div class="settings-container">
+        <div class="top-title">Preferences
+            <div class="material-icons close-settings">close</div>
+        </div>
+        <div class="settings">
+            <div class="settingdiv">
+                <div class="settingtitle">Theme</div>
+                <div class="description">The color palette used to style the editor and tabs.</div>
+                <div class="selector-container selector-theme">material
+                    <div class="material-icons">arrow_drop_down</div>
+                </div>
+                <div class="dropdown-theme dropdown">
+                    <div class="theme">birds-of-paradise</div>
+                    <div class="theme">darkpastel</div>
+                    <div class="theme">friendship-bracelet</div>
+                    <div class="theme">material</div>
+                    <div class="theme">monokai-sublime</div>
+                    <div class="theme">purplenight</div>
+                    <div class="theme">tomorrow-night-bright</div>
+                    <div class="theme">zenburnesque</div>
+                </div>
+            </div>
+            <div class="settingdiv">
+                <div class="settingtitle">Font</div>
+                <div class="description">The font used in the editor.</div>
+                <div class="selector-container selector-font">monospace
+                    <div class="material-icons">arrow_drop_down</div>
+                </div>
+                <div class="dropdown-font dropdown">
+                    <div class="font-fam">code new roman</div>
+                    <div class="font-fam">consolas</div>
+                    <div class="font-fam">deja vu sans mono</div>
+                    <div class="font-fam">inconsolata</div>
+                    <div class="font-fam">liberation mono</div>
+                    <div class="font-fam">menlo</div>
+                    <div class="font-fam">meslo</div>
+                    <div class="font-fam">monospace</div>
+                    <div class="font-fam">source code pro</div>
+                </div>
+            </div>
+            <div class="settingdiv">
+                <div class="settingtitle">Font Size</div>
+                <div class="description">Text size of font in the editor.</div>
+                <div class="selector-container selector-font-size">14px
+                    <div class="material-icons">arrow_drop_down</div>
+                </div>
+                <div class="dropdown-font-size dropdown">
+                    <div class="font-size">12px</div>
+                    <div class="font-size">14px</div>
+                    <div class="font-size">16px</div>
+                    <div class="font-size">18px</div>
+                    <div class="font-size">24px</div>
+                    <div class="font-size">30px</div>
+                    <div class="font-size">36px</div>
+                </div>
+            </div>
+            <div class="settingdiv">
+                <div class="settingtitle">Tab Size</div>
+                <div class="description">Size of tab character.</div>
+                <div class="selector-container selector-tab-size">4
+                    <div class="material-icons">arrow_drop_down</div>
+                </div>
+                <div class="dropdown-tab-size dropdown">
+                    <div class="tab-size">2</div>
+                    <div class="tab-size">4</div>
+                </div>
+            </div>
+            <div class="settingdiv">
+                <div class="settingtitle">Soft Wrap</div>
+                <div class="description">Wraps lines that exceed the width of the window.</div>
+                <div class="selector-container selector-wrap">Wrap
+                    <div class="material-icons">arrow_drop_down</div>
+                </div>
+                <div class="dropdown-wrap dropdown">
+                    <div class="wrap">none</div>
+                    <div class="wrap">wrap</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="dialogue">
+        <div class="dialogue-title">Save Changes?</div>
+        <div class="dialogue-text"></div>
+        <div class="buttons-dialogue">
+            <div class="yes">save</div>
+            <div class="no">discard</div>
+            <div class="cancel">cancel</div>
+        </div>
+    </div>
+    <div class="bg"></div>
+    <div class="menu">
+        <div class="menu-li new">
+            <div class="material-icons">insert_drive_file</div>New</div>
+        <div class="menu-li open">
+            <div class="material-icons">folder</div>Open</div>
+        <div class="menu-li open-dir">
+            <div class="material-icons">folder_open</div>Open Folder</div>
+        <div class="menu-li save">
+            <div class="material-icons">save</div>Save</div>
+        <div class="menu-li save-as">
+            <div class="material-icons">file_download</div>Save As</div>
+        <div class="menu-li tidy-up">
+            <div class="material-icons">format_paint</div>Tidy Up</div>
+        <div class="menu-li settings-button">
+            <div class="material-icons">settings</div>Settings</div>
+    </div>
+    <div class="remove-dialogue">
+        <div class="remove-dialogue-title">Remove File?</div>
+        <div class="remove-dialogue-text"></div>
+        <div class="remove-buttons">
+            <div class="remove-yes">remove</div>
+            <div class="remove-no">cancel</div>
+        </div>
+    </div>
+    <div class="folder-remove-dialogue">
+        <div class="folder-remove-dialogue-title">Remove Folder?</div>
+        <div class="folder-remove-dialogue-text"></div>
+        <div class="folder-remove-buttons">
+            <div class="folder-remove-yes">remove</div>
+            <div class="folder-remove-no">cancel</div>
+        </div>
+    </div>
+    <div class="new-file-dialogue">
+        <div class="new-file-dialogue-title">New File</div>
+        <input type="text" placeholder="untitled.txt" class="dialog-input" />
+        <div class="new-file-buttons">
+            <div class="new-file-create">create</div>
+            <div class="new-file-cancel">cancel</div>
+        </div>
+    </div>
+    <div class="new-folder-dialogue">
+        <div class="new-folder-dialogue-title">New Folder</div>
+        <input type="text" placeholder="untitled" class="dialog-input"/>
+        <div class="new-folder-buttons">
+            <div class="new-folder-create">create</div>
+            <div class="new-folder-cancel">cancel</div>
+        </div>
+    </div>
+    <div class="contextmenu">
+        <div class="remove">Remove</div>
+    </div>
+    <div class="folder-contextmenu">
+        <div class="folder-addfolder">New Folder</div>
+        <div class="folder-addfile">New File</div>
+        <div class="folder-remove">Remove Permanently</div>
+        <div class="folder-removefromproject">Remove from Projects</div>
+    </div>
+    <div class="new-project-dialogue">
+        <div class="new-project-dialogue-title">New Project</div>
+        <div class="chooseDir">Choose Directory</div>
+        <div class="chosenDir">No Directory Chosen</div>
+        <input type="text" placeholder="untitled" class="dialog-input new-project-input" />
+        <div class="new-project-buttons">
+            <div class="new-project-create">create</div>
+            <div class="new-project-cancel">cancel</div>
+        </div>
+    </div>
+    <div class="sidebar">
+        <div class="sidebar-title">Projects</div>
+        <div class="projects"></div>
+        <div class="add-newproject">
+        	<div class="material-icons">add</div>
+        </div>
+    </div>
+    <div class="search-container">
+        <div class="searchbars">
+            <input class="search-bar" type="text" placeholder="Find..." />
+            <input class="search-replace" type="text" placeholder="Replace with..." />
+        </div>
+        <div class="buttons">
+            <div class="find_next">Find Next</div>
+            <div class="replace_all">Replace All</div>
+        </div>
+        <div class="buttons-two">
+            <div class="find_prev">Find Prev</div>
+            <div class="replace">Replace</div>
+        </div>
+    </div>
+    <div class="workspace"></div>
+    <script type="text/javascript" src="assets/codemirror/codemirror.js"></script>
+    <script type="text/javascript" src="assets/js/jquery-3.1.1.js"></script>
+    <script type="text/javascript" src="assets/js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="assets/window/windowBar.js"></script>
+    <script type="text/javascript" src="assets/js/velocity.min.js"></script>
+    <script type="text/javascript" src="assets/js/beautify/beautify.js"></script>
+    <script type="text/javascript" src="assets/js/beautify/beautify-css.js"></script>
+    <script type="text/javascript" src="assets/js/beautify/beautify-html.js"></script>
+    <script type="text/javascript" src="assets/codemirror/addon/edit/matchbrackets.js"></script>
+    <script type="text/javascript" src="assets/codemirror/addon/edit/closetag.js"></script>
+    <script type="text/javascript" src="assets/codemirror/addon/fold/foldcode.js"></script>
+    <script type="text/javascript" src="assets/codemirror/addon/fold/foldgutter.js"></script>
+    <script type="text/javascript" src="assets/codemirror/addon/fold/brace-fold.js"></script>
+    <script type="text/javascript" src="assets/codemirror/addon/fold/xml-fold.js"></script>
+    <script type="text/javascript" src="assets/codemirror/addon/fold/markdown-fold.js"></script>
+    <script type="text/javascript" src="assets/codemirror/addon/fold/comment-fold.js"></script>
+    <script type="text/javascript" src="assets/codemirror/addon/selection/active-line.js"></script>
+    <script type="text/javascript" src="assets/codemirror/addon/edit/closebrackets.js"></script>
+    <script type="text/javascript" src="assets/codemirror/addon/search/searchcursor.js"></script>
+    <script type="text/javascript" src="assets/codemirror/addon/search/search.js"></script>
+    <script type="text/javascript" src="/mode/loadmode/loadmode.js"></script>
+    <script type="text/javascript" src="/mode/meta.js"></script>
+    <script type="text/javascript" src="assets/js/dnd.js"></script>
+    <script type="text/javascript" src="assets/js/app.min.js"></script>
+</body>
+
+</html>

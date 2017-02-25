@@ -1,0 +1,37 @@
+{
+	"manifest_version": 2,
+    "name": "Quantum",
+    "short_name": "Quantum",
+    "description": "A simple and elegant code editor.",
+    "version": "2.9",
+    "minimum_chrome_version": "38",
+    "offline_enabled": true,
+
+    "permissions": [
+        "storage", "unlimitedStorage", {
+            "fileSystem": ["write", "retainEntries", "directory"]
+        }
+    ],
+
+    "icons": {
+        "128": "assets/icon-128.png"
+    },
+
+    "app": {
+        "background": {
+            "scripts": ["background.js"],
+            "persistent": false
+        }
+    },
+    "file_handlers": {
+        "text": {
+            "types": [
+                "application/javascript",
+                "application/json",
+                "application/x-shellscript",
+                "application/xml",
+                "text/*"
+            ]
+        }
+    }
+}

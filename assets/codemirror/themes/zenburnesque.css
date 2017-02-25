@@ -1,0 +1,41 @@
+/*
+
+    Name:       ParaĆ­so (Dark)
+    Author:     Jan T. Sott
+
+    Color scheme by Jan T. Sott (https://github.com/idleberg/Paraiso-CodeMirror)
+    Inspired by the art of Rubens LP (http://www.rubenslp.com.br)
+
+*/
+
+.cm-s-zenburnesque.CodeMirror { background: #2f1e2e; color: #b9b6b0; }
+.cm-s-zenburnesque div.CodeMirror-selected { background: #41323f; }
+.cm-s-zenburnesque .CodeMirror-line::selection, .cm-s-zenburnesque .CodeMirror-line > span::selection, .cm-s-zenburnesque .CodeMirror-line > span > span::selection { background: rgba(65, 50, 63, .99); }
+.cm-s-zenburnesque .CodeMirror-line::-moz-selection, .cm-s-zenburnesque .CodeMirror-line > span::-moz-selection, .cm-s-zenburnesque .CodeMirror-line > span > span::-moz-selection { background: rgba(65, 50, 63, .99); }
+.cm-s-zenburnesque .CodeMirror-gutters { background: #2f1e2e; border-right: 0px; }
+.cm-s-zenburnesque .CodeMirror-guttermarker { color: #ef6155; }
+.cm-s-zenburnesque .CodeMirror-guttermarker-subtle { color: #776e71; }
+.cm-s-zenburnesque .CodeMirror-linenumber { color: #776e71; }
+.cm-s-zenburnesque .CodeMirror-cursor { border-left: 1px solid #8d8687; }
+
+.cm-s-zenburnesque span.cm-comment { color: #e96ba8; }
+.cm-s-zenburnesque span.cm-atom { color: #815ba4; }
+.cm-s-zenburnesque span.cm-number { color: #815ba4; }
+
+.cm-s-zenburnesque span.cm-property, .cm-s-zenburnesque span.cm-attribute { color: #48b685; }
+.cm-s-zenburnesque span.cm-keyword { color: #ef6155; }
+.cm-s-zenburnesque span.cm-string { color: #fec418; }
+
+.cm-s-zenburnesque span.cm-variable { color: #48b685; }
+.cm-s-zenburnesque span.cm-variable-2 { color: #06b6ef; }
+.cm-s-zenburnesque span.cm-def { color: #f99b15; }
+.cm-s-zenburnesque span.cm-bracket { color: #b9b6b0; }
+.cm-s-zenburnesque span.cm-tag { color: #ef6155; }
+.cm-s-zenburnesque span.cm-link { color: #815ba4; }
+.cm-s-zenburnesque span.cm-error { background: #ef6155; color: #8d8687; }
+
+.cm-s-zenburnesque .CodeMirror-activeline-background { background: #4D344A; }
+.cm-s-zenburnesque .CodeMirror-matchingbracket { text-decoration: underline; color: white !important; }
+
+.active-zenburnesque { box-shadow: inset 0px -2px 0px 0px #c149ba ; opacity: 1 !important;}
+.active-zenburnesque .material-icons { color: #c149ba; }

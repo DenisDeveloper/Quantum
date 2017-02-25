@@ -1,0 +1,77 @@
+.app-window-bar-icon {
+  width: 30px;
+  height: 30px;
+  float: right;
+  display: inline-block;
+  position: relative;
+  -webkit-app-region:no-drag;
+}
+
+.app-window-bar-icon:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.app-window-bar-icon:active {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.app-windowbar-line {
+  top: 50%;
+  left: 50%;
+  position: absolute;
+}
+
+.close-left {
+  width: 2px;
+  height: 12px;
+  margin-left: -1px;
+  margin-top: -6px;
+  transform: rotate(45deg);
+}
+
+.close-right {
+  width: 2px;
+  height: 12px;
+  margin-left: -1px;
+  margin-top: -6px;
+  transform: rotate(-45deg);
+}
+
+.maximize-top,
+.maximize-bottom {
+  width: 2px;
+  height: 10px;
+  margin-left: -1px;
+  margin-top: -5px;
+  transform: rotate(90deg);
+}
+
+.maximize-top {
+  margin-top: -9px;
+}
+
+.maximize-bottom {
+  margin-top: -1px;
+}
+
+.maximize-left {
+  width: 2px;
+  height: 10px;
+  margin-top: -5px;
+  margin-left: -5px;
+}
+
+.maximize-right {
+  width: 2px;
+  height: 10px;
+  margin-top: -5px;
+  margin-left: 3px;
+}
+
+.minimize-mid {
+  width: 2px;
+  height: 10px;
+  margin-left: -1px;
+  margin-top: -5px;
+  transform: rotate(90deg);
+}
