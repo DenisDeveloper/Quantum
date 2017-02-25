@@ -29,7 +29,7 @@ As with any editor, themes are a crucial part of a user's experience, so when de
 
 These themes were hand-picked from [this](https://github.com/FarhadG/code-mirror-themes) lovely repository and modified to fit Quantum perfectly. Many thanks to [FarhadG](https://github.com/FarhadG) for providing this!
 
-### Fonts
+#### Fonts
 Quantum has all your favorite fonts.
 - Code New Roman
 - Consolas
@@ -39,6 +39,17 @@ Quantum has all your favorite fonts.
 - Menlo
 - Monospace (default)
 - Source Code Pro
+
+### Key Bindings
+- <code>CTRL + N</code> New File
+- <code>CTRL + O</code> Open File
+- <code>CTRL + S</code> Save File
+- <code>CTRL + SHIFT + S</code> Save As
+- <code>CTRL + W</code> Close Tab
+- <code>CTRL + P</code> Open Preferences
+
+As for the editor itself, all key bindings are CodeMirror's default.
+
 
 ## Installing
 The installation process depends on the operating system you're in. 
