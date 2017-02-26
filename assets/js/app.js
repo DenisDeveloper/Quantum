@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 //Quantum v2.9
+=======
+//Quantum v3.0
+>>>>>>> version 3.0
 //Author: Carlos E. Santos
 $(document).ready(function() {
     var loadTexts = ["Please wait...a few bits tried to escape, but we caught them",
@@ -593,7 +597,13 @@ $(document).ready(function() {
     });
 
     function openSearch() {
+<<<<<<< HEAD
         if (window.getSelection()) {
+=======
+        if (window.getSelection() == '') {
+            $('.search-bar').select();
+        } else {
+>>>>>>> version 3.0
             $('.search-bar').val(window.getSelection());
         }
         $('.workspace').css('height', 'calc(100% - 180px)');
@@ -601,6 +611,10 @@ $(document).ready(function() {
             opacity: '1',
             bottom: '0px'
         }, 200);
+<<<<<<< HEAD
+=======
+        refreshEditors();
+>>>>>>> version 3.0
         setTimeout(function() {
             $('.search-bar').focus();
         }, 200);
@@ -613,10 +627,17 @@ $(document).ready(function() {
             bottom: '-100px'
         }, 200, function() {
             $(this).hide();
+<<<<<<< HEAD
         });
         $('.search-bar').val('');
         cm = editor[$('.active').index()];
         clearSearch(cm);
+=======
+            cm = editor[$('.active').index()];
+       	 	clearSearch(cm);
+            editor[$('.active').index()].focus();
+        });
+>>>>>>> version 3.0
     }
     var found;
     $('.search-bar').on('keyup focus', function() {
@@ -631,7 +652,11 @@ $(document).ready(function() {
                 from: cursor.from(),
                 to: cursor.to()
             });
+<<<<<<< HEAD
             if ($('.cm-searching', '.CodeMirror:eq(' + $('.active').index() + ')').length === 0 && text !== '') {
+=======
+            if ($('.cm-searching', '.CodeMirror:eq(' + $('.active').index() + ') .CodeMirror-lines .CodeMirror-code div').length === 0 && text !== '') {
+>>>>>>> version 3.0
                 $(this).css('box-shadow', 'inset 0px -1px 0px 0px rgba(239, 37, 37, 0.58)');
             } else {
                 $(this).css('box-shadow', 'inset 0px -1px 0px 0px rgba(0, 0, 0, 0.1)');
@@ -927,7 +952,11 @@ $(document).ready(function() {
             editor[$('.active').index()].focus();
         });
     });
+<<<<<<< HEAD
     $(document).on('keyup', '.dialog-input', function(e) {
+=======
+    $(document).on('keyup', '.dialog-input', function() {
+>>>>>>> version 3.0
         var folderName = $(this).val();
         if (folderName === '') {
             folderName = 'untitled';
@@ -946,7 +975,11 @@ $(document).ready(function() {
             });
         }
         if (folderNames.indexOf(folderName) > -1) {
+<<<<<<< HEAD
             $(this).css('box-shadow', '0px 1px 0px 0px #d61f1f !important');
+=======
+            $(this).css('box-shadow', '0px 1px 0px 0px #d61f1f ');
+>>>>>>> version 3.0
         } else {
             $(this).css('box-shadow', '0px 1px 0px 0px #47bfa1');
         }
@@ -1023,7 +1056,11 @@ $(document).ready(function() {
                     newPath.splice(index + 1, array.length - (index + 1));
                     newPath = newPath.join(' ');
                     if (docFrag.querySelector(newPath) !== null) {
+<<<<<<< HEAD
 
+=======
+                        //do nothing
+>>>>>>> version 3.0
                     } else {
                         var temp = array;
                         if (index === 0) {
@@ -1391,11 +1428,19 @@ $(document).ready(function() {
         folderContext(e);
     });
     $(document).on('keyup', '.new-folder-dialogue input', function(e) {
+<<<<<<< HEAD
+=======
+        e.stopPropagation();
+>>>>>>> version 3.0
         if (e.keyCode == 13) {
             $('.new-folder-create').click();
         }
     });
     $(document).on('keyup', '.new-file-dialogue input', function(e) {
+<<<<<<< HEAD
+=======
+        e.stopPropagation();
+>>>>>>> version 3.0
         if (e.keyCode == 13) {
             $('.new-file-create').click();
         }
@@ -1444,7 +1489,11 @@ $(document).ready(function() {
             folderNames.push($(this).clone().children().remove().end().text());
         });
         if (folderNames.indexOf(folderName) > -1) {
+<<<<<<< HEAD
             $(this).parent().parent().find('input').css('box-shadow', '0px 1px 0px 0px #d61f1f !important');
+=======
+            $(this).parent().parent().find('input').css('box-shadow', '0px 1px 0px 0px #d61f1f ');
+>>>>>>> version 3.0
         } else {
             var getMatchingDirEntry = function(obj) {
                 if (obj.name == folderContextMenuName && obj.entry.fullPath == folderContextMenuPath) {
@@ -1537,7 +1586,11 @@ $(document).ready(function() {
             fileNames.push($(this).clone().children().remove().end().text());
         });
         if (fileNames.indexOf(fileName) > -1) {
+<<<<<<< HEAD
             $(this).parent().parent().find('input').css('box-shadow', '0px 1px 0px 0px #d61f1f !important');
+=======
+            $(this).parent().parent().find('input').css('box-shadow', '0px 1px 0px 0px #d61f1f ');
+>>>>>>> version 3.0
         } else {
             var getMatchingDirEntry = function(obj) {
                 if (obj.name == folderContextMenuName && obj.entry.fullPath == folderContextMenuPath) {
@@ -1823,6 +1876,16 @@ $(document).ready(function() {
         }
     }
 
+<<<<<<< HEAD
+=======
+    function calcWidth(sideBarWidth) {
+        $('.sidebar').width(sideBarWidth);
+        $('.tabs').width($(window).width() - 70 - sideBarWidth);
+        $('.workspace').width($(window).width() - sideBarWidth);
+        $('.search-container').width($(window).width() - sideBarWidth);
+    }
+
+>>>>>>> version 3.0
     function loadData(launchData) {
         chrome.storage.local.get({
             data: 'textArray',
@@ -1853,6 +1916,10 @@ $(document).ready(function() {
                 };
                 loadAutoTab();
                 loadSettings(prefs);
+<<<<<<< HEAD
+=======
+                calcWidth(250);
+>>>>>>> version 3.0
                 setTimeout(function() {
                     openLaunchData();
                     resizeTabs();
@@ -1919,10 +1986,14 @@ $(document).ready(function() {
                                 });
                             }
                         });
+<<<<<<< HEAD
                         $('.sidebar').width(sideBarWidth);
                         $('.tabs').width($(window).width() - 70 - sideBarWidth);
                         $('.workspace').width($(window).width() - sideBarWidth);
                         $('.search-container').width($(window).width() - sideBarWidth);
+=======
+                        calcWidth(sideBarWidth);
+>>>>>>> version 3.0
                         setTimeout(function() {
                             openLaunchData();
                             $('.projects').append(docFrag.children);
