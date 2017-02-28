@@ -10,7 +10,7 @@ body {
 
 .contextmenu {
     width: 200px;
-    height: 40px;
+    height: 80px;
     position: absolute;
     z-index: 200;
     background-color: #271821;
@@ -22,7 +22,7 @@ body {
 
 .contextmenu div {
     width: 100%;
-    height: 100%;
+    height: 50%;
     line-height: 40px;
     padding-left: 20px;
     box-sizing: border-box;
@@ -544,7 +544,9 @@ body {
 .folder-remove-dialogue,
 .new-file-dialogue,
 .new-folder-dialogue,
-.new-project-dialogue{
+.new-project-dialogue,
+.rename-file-dialogue,
+.rename-folder-dialogue{
     width: 30%;
     height: auto;
     min-width: 300px;
@@ -565,7 +567,9 @@ body {
 
 .new-file-dialogue input,
 .new-folder-dialogue input,
-.new-project-dialogue input{
+.new-project-dialogue input,
+.rename-file-dialogue input,
+.rename-folder-dialogue input{
     width: 100%;
     height: 40px;
     border: none;
@@ -587,7 +591,9 @@ body {
 .folder-remove-dialogue-title,
 .new-file-dialogue-title,
 .new-folder-dialogue-title,
-.new-project-dialogue-title{
+.new-project-dialogue-title,
+.rename-file-dialogue-title,
+.rename-folder-dialogue-title{
     font-size: 18px;
     color: #000;
 }
@@ -606,7 +612,9 @@ body {
 .folder-remove-buttons,
 .new-file-buttons,
 .new-folder-buttons,
-.new-project-buttons{
+.new-project-buttons,
+.rename-file-buttons,
+.rename-folder-buttons{
     height: 40px;
     margin-top: 10px;
     float: right;
@@ -619,7 +627,9 @@ body {
 .folder-remove-buttons div,
 .new-file-buttons div,
 .new-folder-buttons div,
-.new-project-buttons div{
+.new-project-buttons div,
+.rename-file-buttons div,
+.rename-folder-buttons div{
     width: auto;
     height: 40px;
     font-size: 14px;

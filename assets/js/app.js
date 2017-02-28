@@ -1,6 +1,17 @@
-//Quantum v3.1
+//Quantum v3.2
 //Author: Carlos E. Santos
 $(document).ready(function() {
+    function preLoad() {
+        $('.preload').stop().velocity({
+            opacity: '0'
+        }, {
+            duration: 800,
+            complete: function() {
+                $(this).hide();
+            }
+        });
+        $('body').removeClass('preload-body');
+    }
     var loadTexts = ["Please wait...a few bits tried to escape, but we caught them",
         "Please wait...and dream of faster computers",
         "Please wait...would you like fries with that?",
@@ -26,7 +37,7 @@ $(document).ready(function() {
     //initialize windowBar, made by yours truly ^-^
     $('.windowBar').initializeWindowBar('#FFF');
     //hide elements from view
-    $('.menu, .dropdown, .settings-container, .bg, .dialogue, .search-container, .contextmenu, .folder-contextmenu, .remove-dialogue, .folder-remove-dialogue, .new-file-dialogue, .new-folder-dialogue, .new-project-dialogue').hide();
+    $('.menu, .dropdown, .settings-container, .bg, .dialogue, .search-container, .contextmenu, .folder-contextmenu, .remove-dialogue, .folder-remove-dialogue, .new-file-dialogue, .new-folder-dialogue, .new-project-dialogue, .rename-folder-dialogue, .rename-file-dialogue').hide();
     //define global variables
     var editor = [],
         fileDirs = [],
@@ -251,8 +262,17 @@ $(document).ready(function() {
         openDropDown($(this).parent());
         savePrefs();
     });
-
-    function closeDropdown() {
+	function openSettings(){
+        $('.dropdown').hide();
+        $('.settings-container').show().stop().animate({
+            top: '50%',
+            opacity: '1'
+        }, 200);
+        $('.bg').show().stop().animate({
+            opacity: '0.6'
+        }, 200);
+    }
+    function closeSettings() {
         $('.settings-container').stop().animate({
             top: '60%',
             opacity: '0'
@@ -266,7 +286,7 @@ $(document).ready(function() {
         });
     }
     $('.close-settings').click(function() {
-        closeDropdown();
+        closeSettings();
     });
     $('.bg').click(function() {
         if ($('.dialogue').is(':visible')) {
@@ -287,8 +307,14 @@ $(document).ready(function() {
         if ($('.new-project-dialogue').is(':visible')) {
             closeProjectDialog();
         }
+        if ($('.rename-file-dialogue').is(':visible')) {
+            closeRenameFileDialog();
+        }
+        if ($('.rename-folder-dialogue').is(':visible')) {
+            closeRenameFolderDialog();
+        }
         if ($('.settings-container').is(':visible')) {
-            closeDropdown();
+            closeSettings();
         }
         editor[$('.active').index()].focus();
     });
@@ -317,14 +343,7 @@ $(document).ready(function() {
     });
     //open settings
     $('.settings-button').click(function() {
-        $('.dropdown').hide();
-        $('.settings-container').show().stop().animate({
-            top: '50%',
-            opacity: '1'
-        }, 200);
-        $('.bg').show().stop().animate({
-            opacity: '0.6'
-        }, 200);
+        openSettings();
     });
     //check input so as not to leave document untitled
     $(document).on('click', '.CodeMirror', function(e) {
@@ -598,7 +617,11 @@ $(document).ready(function() {
         } else {
             $('.search-bar').val(window.getSelection());
         }
-        $('.workspace').css('height', 'calc(100% - 180px)');
+        if (chrome.app.window.current().isFullscreen()) {
+            $('.workspace').css('height', 'calc(100% - 150px)');
+        } else {
+            $('.workspace').css('height', 'calc(100% - 180px)');
+        }
         $('.search-container').show().stop().animate({
             opacity: '1',
             bottom: '0px'
@@ -617,7 +640,7 @@ $(document).ready(function() {
         }, 200, function() {
             $(this).hide();
             cm = editor[$('.active').index()];
-       	 	clearSearch(cm);
+            clearSearch(cm);
             editor[$('.active').index()].focus();
         });
     }
@@ -707,7 +730,11 @@ $(document).ready(function() {
             $('.open').click();
         }
         if (e.ctrlKey && e.keyCode == 80 || e.metaKey && e.keyCode == 80) {
-            $('.settings-button').click();
+            if($('.settings-container').is(':visible')){
+                closeSettings();
+            }else{
+                openSettings();
+            }
         }
         if (e.ctrlKey && e.keyCode == 70 || e.metaKey && e.keyCode == 70) {
             if ($('.search-container').is(':visible') && window.getSelection() === '') {
@@ -721,7 +748,16 @@ $(document).ready(function() {
             $('.active .close').click();
         }
         if (e.keyCode == 27) {
-            closeSearch();
+            if (chrome.app.window.current().isFullscreen()) {
+                e.preventDefault();
+                if ($('.search-container').is(':visible')) {
+                    closeSearch();
+                }
+            } else {
+                if ($('.search-container').is(':visible')) {
+                    closeSearch();
+                }
+            }
         }
     });
     //menu miscellaneous functionality
@@ -873,6 +909,7 @@ $(document).ready(function() {
         closeProjectDialog();
         editor[$('.active').index()].focus();
     });
+
     var projectDir;
 
     function setChosenDirInd(dirEntry) {
@@ -897,6 +934,7 @@ $(document).ready(function() {
                 setChosenDirInd(state);
             } else {
                 setChosenDirInd(dirEntry);
+                $('.new-project-input').focus();
             }
         });
     });
@@ -930,7 +968,7 @@ $(document).ready(function() {
             editor[$('.active').index()].focus();
         });
     });
-    $(document).on('keyup', '.dialog-input', function(e) {
+    $(document).on('keyup', '.dialog-input:not(.rename-file-input, .rename-folder-input)', function(e) {
         var folderName = $(this).val();
         if (folderName === '') {
             folderName = 'untitled';
@@ -978,14 +1016,14 @@ $(document).ready(function() {
     }
 
     function displayDataDir(x) {
-        var thisName = directories[x].name;
-        var path = directories[x].path;
+        var thisName = directories[x].entry.name;
+        var path = directories[x].entry.fullPath;
 
         //what the fuck am I doing with my life.
         path = splitAndReturn(path, '/', 0);
         //adjust path for classes
         path.forEach(function(val, index, array) {
-            path[index] = val.replace(/ /g, '_').replace(/\./g, '').replace(/["'()]/g, '_');
+            path[index] = replaceName(val);
         });
 
         //adjust names for classes
@@ -994,7 +1032,7 @@ $(document).ready(function() {
         var div = document.createElement('div');
         div.className = thisName + ' folder';
         div.setAttribute('path', directories[x].entry.fullPath);
-        div.innerHTML = '<div class="material-icons">folder</div>' + directories[x].name + '<ul style="display:none;" class="' + thisName + 'ul"></ul>';
+        div.innerHTML = '<div class="material-icons">folder</div>' + directories[x].entry.name + '<ul style="display:none;" class="' + thisName + 'ul"></ul>';
         path.shift();
         path.forEach(function(value, index, array) {
             path[index] = value + ' .' + value + 'ul';
@@ -1039,7 +1077,6 @@ $(document).ready(function() {
 
         //adjust for classes
         name = replaceName(name);
-        name = name.replace(/\./g, '');
 
         //create div
         var div = document.createElement('div');
@@ -1101,13 +1138,9 @@ $(document).ready(function() {
                 for (var gg = 0; gg < results.length; gg++) {
                     var data = results[gg];
                     if (data.isDirectory) {
-                        var parentDirectory = data.fullPath.split('/');
-                        parentDirectory = parentDirectory[parentDirectory.length - 2];
+                        var parentDirectory = splitAndReturn(data.fullPath, '/', 2);
                         directories.push({
-                            name: data.name,
-                            path: data.fullPath,
                             entry: data,
-                            parentDirectory: parentDirectory
                         });
                         displayDataDir(directories.length - 1);
                         loadDirEntry(data);
@@ -1355,6 +1388,64 @@ $(document).ready(function() {
             $(this).hide();
         });
     }
+
+    function openRenameFileDialog() {
+        $('.rename-file-dialogue').show().stop().animate({
+            top: '50%',
+            opacity: '1'
+        }, 200);
+        $('.bg').show().stop().animate({
+            opacity: '0.6'
+        }, 200);
+    }
+
+    function closeRenameFileDialog() {
+        $('.rename-file-dialogue').stop().animate({
+            top: '60%',
+            opacity: '0'
+        }, 200, function() {
+            $(this).hide();
+        });
+        $('.bg').stop().animate({
+            opacity: '0'
+        }, 200, function() {
+            $(this).hide();
+        });
+    }
+
+    function openRenameFolderDialog() {
+        $('.rename-folder-dialogue').show().stop().animate({
+            top: '50%',
+            opacity: '1'
+        }, 200);
+        $('.bg').show().stop().animate({
+            opacity: '0.6'
+        }, 200);
+    }
+
+    function closeRenameFolderDialog() {
+        $('.rename-folder-dialogue').stop().animate({
+            top: '60%',
+            opacity: '0'
+        }, 200, function() {
+            $(this).hide();
+        });
+        $('.bg').stop().animate({
+            opacity: '0'
+        }, 200, function() {
+            $(this).hide();
+        });
+    }
+
+    function resetInput(input, value) {
+        $(input).css('box-shadow', '0px 1px 0px 0px #47bfa1');
+        $(input).val(value);
+        if (value != '') {
+            $(input).select();
+        } else {
+            $(input).focus();
+        }
+    }
     $(document).on('contextmenu', '.projects .file', function(e) {
         e.stopPropagation();
         e.preventDefault();
@@ -1363,6 +1454,200 @@ $(document).ready(function() {
         contextMenuPath = $(this).attr('path');
         fileToRemove = $(this);
         contextMenuOn(e);
+    });
+    $('.folder-contextmenu .folder-rename').click(function() {
+        openRenameFolderDialog();
+        contextMenuOff();
+        resetInput('.rename-folder-input', folderContextMenuName);
+    });
+    $('.rename-folder-cancel').click(function() {
+        closeRenameFolderDialog();
+        editor[$('.active').index()].focus();
+    });
+
+    function removeChildDirectories(directory) {
+        var directoryFolders = jQuery.grep(directories, function(elem) {
+            return (elem.entry.fullPath.indexOf(directory.fullPath) > -1);
+        });
+        var directoryFiles = jQuery.grep(files, function(elem) {
+            return (elem.entry.fullPath.indexOf(directory.fullPath) > -1);
+        });
+        if (directoryFolders.length !== 0) {
+            for (var j = 0; j < directoryFolders.length; j++) {
+                directories.splice(directories.indexOf(directoryFolders[j]), 1);
+            }
+        }
+        if (directoryFiles.length !== 0) {
+            for (var g = 0; g < directoryFiles.length; g++) {
+                files.splice(files.indexOf(directoryFiles[g]), 1);
+            }
+        }
+    }
+
+    function reloadLoadedEntries(directory) {
+        var dirReader = directory.createReader();
+        var readEntries = function() {
+            dirReader.readEntries(function(results) {
+                for (var i = 0; i < results.length; i++) {
+                    var data = results[i];
+                    if (data.isDirectory) {
+                        var parentDirectory = splitAndReturn(data.fullPath, '/', 2);
+                        directories.push({
+                            entry: data,
+                        });
+                        reloadLoadedEntries(data);
+                    } else {
+                        files.push({
+                            entry: data
+                        });
+                    }
+                }
+            });
+        };
+        readEntries();
+    }
+
+    function assignEntries(folder, oldName, newName) {
+        $(folder + ' div:not(.material-icons)').each(function(index) {
+            var path = $(this).attr('path');
+            $(this).attr('path', path.replace(oldName, newName));
+            if ($(this).hasClass('file')) {
+                var fileName = $(this).clone().children().remove().end().text();
+                if (checkTabs(fileName, path)) {
+                    $('.tab').eq(editIndex).attr('path', path.replace(oldName, newName));
+                }
+            }
+        });
+    }
+    $('.rename-folder-create').click(function() {
+        var newFolderName = $('.rename-folder-input').val();
+        if (newFolderName == '') {
+            newFolderName = folderContextMenuName;
+        }
+        var folderNames = [];
+        folderToRemove.parent().children().each(function(index) {
+            var text = $(this).clone().children().remove().end().text();
+            if (text == folderContextMenuName) {
+
+            } else {
+                folderNames.push(text);
+            }
+        });
+        if (folderNames.indexOf(newFolderName) > -1) {
+            $('.rename-folder-input').css('box-shadow', '0px 1px 0px 0px #d61f1f');
+            $('.rename-folder-input').focus();
+        } else {
+            function getMatchingEntry(obj) {
+                if (obj.entry.name == folderContextMenuName && obj.entry.fullPath == folderContextMenuPath) {
+                    return obj;
+                }
+            }
+
+            function getIndex(element) {
+                return (element.entry.name == folderContextMenuName && element.entry.fullPath == folderContextMenuPath);
+            }
+            var directory = directories.find(getMatchingEntry);
+            directory = directory.entry;
+            var directoryIndex = directories.findIndex(getIndex);
+            directory.getParent(function(parentEntry) {
+                directory.moveTo(parentEntry, newFolderName, function(newFolderEntry) {
+                    var nameForClass = newFolderEntry.name;
+                    nameForClass = replaceName(nameForClass);
+                    directories[directoryIndex] = {
+                        entry: newFolderEntry
+                    }
+                    folderToRemove.attr('class', nameForClass + ' folder');
+                    folderToRemove.attr('path', newFolderEntry.fullPath);
+                    folderToRemove.children().last().attr('class', nameForClass + 'ul');
+                    folderToRemove.get(0).childNodes[1].nodeValue = newFolderName;
+                    removeChildDirectories(directory);
+                    reloadLoadedEntries(newFolderEntry);
+                    assignEntries('.' + nameForClass + 'ul', directory.name, newFolderEntry.name);
+                    closeRenameFolderDialog();
+                    editor[$('.active').index()].focus();
+                });
+            });
+        }
+    });
+    $('.contextmenu .rename').click(function() {
+        openRenameFileDialog();
+        contextMenuOff();
+        resetInput('.rename-file-input', contextMenuName);
+    });
+
+    function rename(cwd, src, newName, oldFileEntry, fileToRemove, isTab) {
+        cwd.getFile(src, {}, function(fileEntry) {
+            fileEntry.moveTo(cwd, newName, function(newFileEntry) {
+                var nameForClass = replaceName(newFileEntry.name);
+                fileToRemove.attr('class', nameForClass + ' file');
+                fileToRemove.attr('path', newFileEntry.fullPath);
+                oldFileEntry.entry = newFileEntry;
+                if (isTab) {
+                    changeTab(editIndex, newName, newFileEntry.fullPath);
+                    fileDirs[editIndex] = newFileEntry;
+                    changeMode();
+                }
+            });
+        });
+    }
+
+    function changeTab(index, name, path) {
+        $('.tab').eq(index).find('.title').val(name);
+        $('.tab').eq(index).attr('path', path);
+        $('.tab').eq(index).attr('data', name + 'isOpen');
+    }
+    $('.rename-file-create').click(function() {
+        var newName = $(this).parent().parent().find('input').val();
+
+        function getMatchingEntry(obj) {
+            if (obj.entry.name == contextMenuName && obj.entry.fullPath == contextMenuPath) {
+                return obj;
+            }
+        }
+        var oldName = files.find(getMatchingEntry).entry.name;
+        if (newName == '') {
+            newName = oldName;
+        }
+        var fileNames = [];
+        fileToRemove.parent().children().each(function(index) {
+            var text = $(this).clone().children().remove().end().text();
+            if (text == oldName) {
+
+            } else {
+                fileNames.push(text);
+            }
+        });
+        if (fileNames.indexOf(newName) > -1) {
+            $(this).parent().parent().find('input').css('box-shadow', '0px 1px 0px 0px #d61f1f ');
+            $('.rename-file-input').focus();
+        } else {
+            var parentName = splitAndReturn(contextMenuPath, '/', 2),
+                parentPath = contextMenuPath.split('/');
+            parentPath.splice(parentPath.length - 1, 1);
+            parentPath = parentPath.join('/');
+
+            function getMatchingDirEntry(obj) {
+                if (obj.entry.name == parentName && obj.entry.fullPath == parentPath) {
+                    return obj;
+                }
+            }
+            var projectDirEntry = directories.find(getMatchingDirEntry);
+            projectDirEntry = projectDirEntry.entry;
+            projectFileEntry = files.find(getMatchingEntry);
+            if (checkTabs(contextMenuName, projectFileEntry.entry.fullPath) === true) {
+                rename(projectDirEntry, projectFileEntry.entry.name, newName, projectFileEntry, fileToRemove, true);
+                fileToRemove.get(0).childNodes[1].nodeValue = newName;
+            } else {
+                rename(projectDirEntry, projectFileEntry.entry.name, newName, projectFileEntry, fileToRemove, false);
+                fileToRemove.get(0).childNodes[1].nodeValue = newName;
+            }
+            closeRenameFileDialog();
+            editor[$('.active').index()].focus();
+        }
+    });
+    $('.rename-file-cancel').click(function() {
+        closeRenameFileDialog();
+        editor[$('.active').index()].focus();
     });
     $('.contextmenu .remove').click(function() {
         openRemoveDialog();
@@ -1376,6 +1661,20 @@ $(document).ready(function() {
         folderContextMenuPath = $(this).attr('path');
         folderToRemove = $(this);
         folderContext(e);
+
+        var projectChildren = $('.projects').children();
+        var path = [];
+        projectChildren.each(function() {
+            path.push($(this).attr('path'))
+        });
+        if (path.indexOf(folderContextMenuPath) > -1) {
+            $('.folder-contextmenu .folder-rename').hide();
+            $('.folder-contextmenu .folder-removefromproject').show();
+            
+        } else {
+            $('.folder-contextmenu .folder-rename').show();
+            $('.folder-contextmenu .folder-removefromproject').hide();
+        }
     });
     $(document).on('keyup', '.new-folder-dialogue input', function(e) {
         e.stopPropagation();
@@ -1387,6 +1686,70 @@ $(document).ready(function() {
         e.stopPropagation();
         if (e.keyCode == 13) {
             $('.new-file-create').click();
+        }
+    });
+    $(document).on('keyup', '.rename-file-input', function(e) {
+        e.stopPropagation();
+        var newName = $(this).val();
+
+        function getMatchingEntry(obj) {
+            if (obj.entry.name == contextMenuName && obj.entry.fullPath == contextMenuPath) {
+                return obj;
+            }
+        }
+        var oldName = files.find(getMatchingEntry).entry.name;
+        if (newName == '') {
+            newName = oldName;
+        }
+        var fileNames = [];
+        fileToRemove.parent().children().each(function(index) {
+            var text = $(this).clone().children().remove().end().text();
+            if (text == oldName) {
+
+            } else {
+                fileNames.push(text);
+            }
+        });
+        if (fileNames.indexOf(newName) > -1) {
+            $(this).css('box-shadow', '0px 1px 0px 0px #d61f1f ');
+        } else {
+            $(this).css('box-shadow', '0px 1px 0px 0px #47bfa1');
+
+        }
+        if (e.keyCode == 13) {
+            $('.rename-file-create').click();
+        }
+    });
+    $(document).on('keyup', '.rename-folder-input', function(e) {
+        e.stopPropagation();
+        var newName = $(this).val();
+
+        function getMatchingEntry(obj) {
+            if (obj.entry.name == folderContextMenuName && obj.entry.fullPath == folderContextMenuPath) {
+                return obj;
+            }
+        }
+        var oldName = directories.find(getMatchingEntry).entry.name;
+        if (newName == '') {
+            newName = oldName;
+        }
+        var folderNames = [];
+        folderToRemove.parent().children().each(function(index) {
+            var text = $(this).clone().children().remove().end().text();
+            if (text == oldName) {
+
+            } else {
+                folderNames.push(text);
+            }
+        });
+        if (folderNames.indexOf(newName) > -1) {
+            $(this).css('box-shadow', '0px 1px 0px 0px #d61f1f ');
+        } else {
+            $(this).css('box-shadow', '0px 1px 0px 0px #47bfa1');
+
+        }
+        if (e.keyCode == 13) {
+            $('.rename-folder-create').click();
         }
     });
     $('.folder-contextmenu .folder-removefromproject').click(function() {
@@ -1419,9 +1782,7 @@ $(document).ready(function() {
     $('.folder-contextmenu .folder-addfolder').click(function() {
         openNewFolderDialog();
         folderContextOff();
-        $('.new-folder-dialogue input').css('box-shadow', '0px 1px 0px 0px #47bfa1');
-        $('.new-folder-dialogue input').val('');
-        $('.new-folder-dialogue input').focus();
+        resetInput('.new-folder-input', '');
     });
     $('.new-folder-create').click(function() {
         var folderName = $(this).parent().parent().find('input').val();
@@ -1433,10 +1794,11 @@ $(document).ready(function() {
             folderNames.push($(this).clone().children().remove().end().text());
         });
         if (folderNames.indexOf(folderName) > -1) {
-            $(this).parent().parent().find('input').css('box-shadow', '0px 1px 0px 0px #d61f1f ');
+            $('.new-folder-input').css('box-shadow', '0px 1px 0px 0px #d61f1f ');
+            $('.new-folder-input').focus();
         } else {
             var getMatchingDirEntry = function(obj) {
-                if (obj.name == folderContextMenuName && obj.entry.fullPath == folderContextMenuPath) {
+                if (obj.entry.name == folderContextMenuName && obj.entry.fullPath == folderContextMenuPath) {
                     return obj;
                 }
             };
@@ -1477,7 +1839,7 @@ $(document).ready(function() {
     });
     $('.folder-remove-yes').click(function() {
         function getMatchingDirEntry(obj) {
-            if (obj.name == folderContextMenuName && obj.entry.fullPath == folderContextMenuPath) {
+            if (obj.entry.name == folderContextMenuName && obj.entry.fullPath == folderContextMenuPath) {
                 return obj;
             }
         }
@@ -1508,9 +1870,7 @@ $(document).ready(function() {
     $('.folder-addfile').click(function() {
         openNewFileDialog();
         contextMenuOff();
-        $('.new-file-dialogue input').css('box-shadow', '0px 1px 0px 0px #47bfa1');
-        $('.new-file-dialogue input').val('');
-        $('.new-file-dialogue input').focus();
+        resetInput('.new-file-input', '');
     });
     $('.new-file-cancel').click(function() {
         closeNewFileDialog();
@@ -1526,10 +1886,11 @@ $(document).ready(function() {
             fileNames.push($(this).clone().children().remove().end().text());
         });
         if (fileNames.indexOf(fileName) > -1) {
-            $(this).parent().parent().find('input').css('box-shadow', '0px 1px 0px 0px #d61f1f ');
+            $('.new-file-input').css('box-shadow', '0px 1px 0px 0px #d61f1f');
+            $('.new-file-input').focus();
         } else {
             var getMatchingDirEntry = function(obj) {
-                if (obj.name == folderContextMenuName && obj.entry.fullPath == folderContextMenuPath) {
+                if (obj.entry.name == folderContextMenuName && obj.entry.fullPath == folderContextMenuPath) {
                     return obj;
                 }
             };
@@ -1731,13 +2092,53 @@ $(document).ready(function() {
     }
     $(window).resize(function() {
         var width = $('.sidebar').width();
-        $('.tabs').width($(window).width() - 70 - width);
+        calcWidth(width);
         resizeTabs();
-        $('.workspace').width($(window).width() - width);
-        $('.search-container').width($(window).width() - width);
         refreshEditors();
+
+        //fullscreen
+        if (chrome.app.window.current().isFullscreen()) {
+            setFullscreen();
+        } else {
+            undoFullscreen();
+        }
     });
 
+    function setFullscreen() {
+        $('.windowBar').stop().animate({
+            marginTop: '-30px'
+        }, 200, function() {
+            $(this).hide();
+        });
+        $('.tabs, .sidebar, .overflow-menu').css({
+            marginTop: '0'
+        });
+        $('.menu').css('margin-top', '15px');
+        $('.sidebar').css('height', '100%');
+        if ($('.search-container').is(':visible')) {
+            $('.workspace').css('height', 'calc(100% - 150px)');
+        } else {
+            $('.workspace').css('height', 'calc(100% - 50px)');
+        }
+        $('.workspace').css('margin-top', '50px');
+    }
+
+    function undoFullscreen() {
+        $('.windowBar').show().stop().animate({
+            marginTop: '0px'
+        }, 200);
+        $('.tabs, .sidebar, .overflow-menu').css({
+            marginTop: '30px'
+        });
+        $('.menu').css('margin-top', '45px');
+        $('.sidebar').css('height', 'calc(100% - 30px)');
+        if ($('.search-container').is(':visible')) {
+            $('.workspace').css('height', 'calc(100% - 180px)');
+        } else {
+            $('.workspace').css('height', 'calc(100% - 80px)');
+        }
+        $('.workspace').css('margin-top', '80px');
+    }
     $('.started-button').click(function() {
         $('.getting-started').stop().animate({
             top: '-100%',
@@ -1968,16 +2369,4 @@ $(document).ready(function() {
             chrome.app.window.current().maximize();
         }
     });
-
-    function preLoad() {
-        $('.preload').stop().velocity({
-            opacity: '0'
-        }, {
-            duration: 800,
-            complete: function() {
-                $(this).hide();
-            }
-        });
-        $('body').removeClass('preload-body');
-    }
 });
