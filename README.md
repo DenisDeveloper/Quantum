@@ -1,4 +1,4 @@
-[<img src="https://lh6.googleusercontent.com/lYhABMGTX3mhWhuxJxYQToTKZ5Zqo8ZVaK1Kk3XLJLClrk7MDqGqWX3345cD_mjRkaHd7VRP_0NdbtY=w1366-h638-rw">](https://chrome.google.com/webstore/detail/quantum/hmnlklahndgbhdoclhdnoafhafbhmnkm)
+[<img src="https://raw.githubusercontent.com/carlelieser/Quantum/master/assets/imgs/github-image.png">](https://chrome.google.com/webstore/detail/quantum/hmnlklahndgbhdoclhdnoafhafbhmnkm)
 
 Quantum is a beautiful material design code editor based off of [atom](https://atom.io/) and [sublime text](https://www.sublimetext.com/). By extracting the most important features and adding our own spice, Quantum leaves behind the unnecessary clutter and provides you with a clean and rich code editing experience.
 
