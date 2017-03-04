@@ -1,4 +1,4 @@
-//Quantum v3.2
+//Quantum v3.7
 //Author: Carlos E. Santos
 $(document).ready(function() {
     function preLoad() {
@@ -34,10 +34,9 @@ $(document).ready(function() {
     ];
     $('.loading-text').text(loadTexts[Math.round(Math.random() * (loadTexts.length - 1))]);
     loadData(launchData);
-    //initialize windowBar, made by yours truly ^-^
-    $('.windowBar').initializeWindowBar('#FFF');
+    $('.windowBar').initializeWindowBar('#000000');
     //hide elements from view
-    $('.menu, .dropdown, .settings-container, .bg, .dialogue, .search-container, .contextmenu, .folder-contextmenu, .remove-dialogue, .folder-remove-dialogue, .new-file-dialogue, .new-folder-dialogue, .new-project-dialogue, .rename-folder-dialogue, .rename-file-dialogue').hide();
+    $('.menu, .dropdown, .settings-container, .bg, .dialogue, .search-container, .contextmenu, .folder-contextmenu, .remove-dialogue, .folder-remove-dialogue, .new-file-dialogue, .new-folder-dialogue, .new-project-dialogue, .rename-folder-dialogue, .rename-file-dialogue, .settingdiv span').hide();
     //define global variables
     var editor = [],
         fileDirs = [],
@@ -108,13 +107,15 @@ $(document).ready(function() {
 
     function savePrefs() {
         var font = $('.CodeMirror').css('font-family'),
-            fontSize = $('.CodeMirror').css('font-size');
+            fontSize = $('.CodeMirror').css('font-size'),
+            library = $('.selector-library').clone().children().remove().end().text();
         prefs = {
             theme: config.theme,
             font: font,
             fontSize: fontSize,
             tabSize: config.tabSize,
-            softWrap: config.lineWrapping
+            softWrap: config.lineWrapping,
+            library: library
         };
         chrome.storage.local.set({
             settings: prefs
@@ -137,6 +138,14 @@ $(document).ready(function() {
         return "rgb(" + (Math.round((t - R) * p) + R) + "," + (Math.round((t - G) * p) + G) + "," + (Math.round((t - B) * p) + B) + ")";
     }
 
+    function loadColor(color) {
+        $('.sidebar').css('background-color', shadeRGBColor(color, -0.2));
+        $('.workspace, body').css('background-color', color);
+        $('.add-newproject').css('background-color', shadeRGBColor($('.active').css('box-shadow').replace(/^.*(rgba?\([^)]+\)).*$/, '$1'), -0.4));
+        $('.windowBar').css('background-color', shadeRGBColor(color, 0.1));
+        $('.settings-container').css('background-color', shadeRGBColor(color, -0.1));
+    }
+
     function loadSettings(prefs) {
         $('.CodeMirror').css('font-family', prefs.font);
         $('.CodeMirror').css('font-size', prefs.fontSize);
@@ -144,20 +153,18 @@ $(document).ready(function() {
         setEditorOption('tabSize', prefs.tabSize);
         setEditorOption('lineWrapping', prefs.softWrap);
         $('.active').attr('class', 'tab active active-' + prefs.theme);
-        $('.sidebar').css('background-color', shadeRGBColor($('.CodeMirror').css('background-color'), -0.2));
-        $('.workspace, body').css('background-color', $('.CodeMirror').css('background-color'));
-        $('.add-newproject').css('background-color', shadeRGBColor($('.active').css('box-shadow').replace(/^.*(rgba?\([^)]+\)).*$/, '$1'), -0.4));
+        var color = $('.CodeMirror').css('background-color');
+        loadColor(color);
         config.theme = prefs.theme;
         config.tabSize = prefs.tabSize;
         config.indentUnit = prefs.tabSize;
         config.lineWrapping = prefs.softWrap;
-        var color = $('.CodeMirror').css('background-color');
         changeTabTheme(color);
         refreshEditors();
     }
 
     function setSelectors(prefs) {
-        $('.selector-theme').html(prefs.theme + '<div class="material-icons">arrow_drop_down</div>');
+        $('.selector-theme').html(prefs.theme.replace(/-/g, ' ') + '<div class="material-icons">arrow_drop_down</div>');
         $('.selector-font').html(prefs.font.replace(/"/g, '').toLowerCase() + '<div class="material-icons">arrow_drop_down</div>');
         $('.selector-font-size').html(prefs.fontSize + '<div class="material-icons">arrow_drop_down</div>');
         $('.selector-tab-size').html(prefs.tabSize + '<div class="material-icons">arrow_drop_down</div>');
@@ -166,6 +173,10 @@ $(document).ready(function() {
         } else {
             $('.selector-wrap').html('none' + '<div class="material-icons">arrow_drop_down</div>');
         }
+        if (prefs.library === undefined) {
+            prefs.library = 'jquery.min.js';
+        }
+        $('.selector-library').html(prefs.library + '<div class="material-icons">arrow_drop_down</div>');
     }
 
     function loadPrefs() {
@@ -173,13 +184,14 @@ $(document).ready(function() {
             settings: 'prefs'
         }, function(item) {
             var setting = item.settings;
-            if (setting == 'prefs' || undefined || null) {
+            if (setting == 'prefs' || setting === undefined || setting === null) {
                 prefs = {
                     theme: 'material',
                     font: 'monospace',
                     fontSize: '14px',
                     tabSize: 4,
-                    softWrap: true
+                    softWrap: true,
+                    library: 'jquery.min.js'
                 };
                 loadSettings(prefs);
                 setSelectors(prefs);
@@ -188,6 +200,7 @@ $(document).ready(function() {
                 loadSettings(setting);
                 setSelectors(setting);
             }
+
         });
     }
 
@@ -204,17 +217,23 @@ $(document).ready(function() {
     function changeTabTheme(color) {
         $('.tabs, .overflow-menu').css('background-color', color);
     }
+    $('.settings').scroll(function() {
+        var scroll = $(this).scrollTop();
+        if (scroll !== 0) {
+            $('.top-title').css('box-shadow', '0px 5px 9px 0px rgba(0,0,0,0.1)');
+        } else {
+            $('.top-title').css('box-shadow', 'none');
+        }
+    });
     $(document).on('click', '.dropdown .theme', function() {
         var option = 'theme',
-            value = $(this).text();
+            value = $(this).text().replace(/ /g, '-');
         $('.active').attr('class', 'tab active active-' + value);
-        setDDOP($('.selector-theme'), value);
+        setDDOP($('.selector-theme'), $(this).text());
         setEditorOption(option, value);
         config.theme = value;
-        $('.workspace, body').css('background-color', $('.CodeMirror').css('background-color'));
-        $('.sidebar').css('background-color', shadeRGBColor($('.CodeMirror').css('background-color'), -0.2));
-        $('.add-newproject').css('background-color', shadeRGBColor($('.active').css('box-shadow').replace(/^.*(rgba?\([^)]+\)).*$/, '$1'), -0.4));
         var color = $('.CodeMirror').css('background-color');
+        loadColor(color);
         changeTabTheme(color);
         openDropDown($(this).parent());
         savePrefs();
@@ -255,14 +274,114 @@ $(document).ready(function() {
         } else {
             wrap = true;
         }
-        setDDOP($('.selector-wrap'), $(this).text());
+        setDDOP($('.selector-wrap'), wrap);
         setEditorOption('lineWrapping', wrap);
         config.lineWrapping = wrap;
         refreshEditors();
         openDropDown($(this).parent());
         savePrefs();
     });
-	function openSettings(){
+
+    function getFile(url, name) {
+        $.get(url, function(data) {
+            var folderUsed;
+            if (folderToRemove.find('.material-icons').first().text() == 'folder_open') {
+                folderUsed = folderToRemove;
+            } else {
+                folderUsed = folderToRemove.parent().parent();
+            }
+            var dirName = folderUsed.clone().children().remove().end().text();
+            var dirPath = folderUsed.attr('path');
+            var getMatchingDirEntry = function(obj) {
+                if (obj.entry.name == dirName && obj.entry.fullPath == dirPath) {
+                    return obj;
+                }
+            };
+            var dirEntry = directories.find(getMatchingDirEntry);
+            dirEntry = dirEntry.entry;
+            dirEntry.getFile(name, {
+                create: true,
+                exclusive: true
+            }, function(fileEntry) {
+                //write data to file  
+                fileEntry.createWriter(function(fileWriter) {
+                    var blob = new Blob([data]);
+                    fileWriter.write(blob);
+                });
+                files.push({
+                    entry: fileEntry
+                });
+                var name = fileEntry.name;
+                name = replaceName(name);
+                name = name.replace(/\./g, '');
+                //create div
+                var div = document.createElement('div');
+                div.className = name + ' file';
+                div.setAttribute('path', fileEntry.fullPath);
+                div.innerHTML = '<div class="material-icons">insert_drive_file</div>' + fileEntry.name;
+                folderUsed.children().last().append(div);
+                savePrefs();
+            });
+        });
+    }
+    $(document).on('click', '.dropdown .library', function() {
+        var name = $(this).text();
+        var folderUsed;
+        if (folderToRemove.find('.material-icons').first().text() == 'folder_open') {
+            folderUsed = folderToRemove;
+        } else {
+            folderUsed = folderToRemove.parent().parent();
+        }
+        var folderNames = [];
+
+        openDropDown($(this).parent());
+        if (!folderUsed) {
+            $('.settingdiv span').text('No folder selected. Click on the folder you wish to add ' + name + ' to in the projects section.');
+            $('.settingdiv span').show();
+        } else {
+            var folderName = folderUsed.clone().children().remove().end().text();
+            folderUsed.children().last().children().each(function() {
+                var thisName = $(this).clone().children().remove().end().text();
+                folderNames.push(thisName);
+            });
+            if (navigator.onLine) {
+                if (folderNames.indexOf(name) > -1) {
+                    $('.settingdiv span').text(name + ' already exists.');
+                    $('.settingdiv span').show();
+                } else {
+                    setDDOP($('.selector-library'), name);
+                    switch (name) {
+                        case 'jquery.min.js':
+                            getFile('https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js', name);
+                            break;
+                        case 'angular.min.js':
+                            getFile('https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.1/angular.min.js', name);
+                            break;
+                        case 'backbone.min.js':
+                            getFile('https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.3.3/backbone-min.js', name);
+                            break;
+                        case 'ember.min.js':
+                            getFile('https://cdnjs.cloudflare.com/ajax/libs/ember.js/2.11.2/ember.min.js', name);
+                            break;
+                        case 'react.min.js':
+                            getFile('https://cdnjs.cloudflare.com/ajax/libs/react/15.4.2/react.min.js', name);
+                            break;
+                        case 'react-dom.min.js':
+                            getFile('https://cdnjs.cloudflare.com/ajax/libs/react/15.4.2/react-dom.min.js', name);
+                            break;
+                        case 'three.min.js':
+                            getFile('https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js', name);
+                            break;
+                    }
+                    $('.settingdiv span').hide();
+                }
+            } else {
+                $('.settingdiv span').show();
+            }
+        }
+    });
+
+    function openSettings() {
         $('.dropdown').hide();
         $('.settings-container').show().stop().animate({
             top: '50%',
@@ -271,7 +390,9 @@ $(document).ready(function() {
         $('.bg').show().stop().animate({
             opacity: '0.6'
         }, 200);
+        $('.settingdiv span').hide();
     }
+
     function closeSettings() {
         $('.settings-container').stop().animate({
             top: '60%',
@@ -287,6 +408,7 @@ $(document).ready(function() {
     }
     $('.close-settings').click(function() {
         closeSettings();
+        editor[$('.active').index()].focus();
     });
     $('.bg').click(function() {
         if ($('.dialogue').is(':visible')) {
@@ -317,29 +439,6 @@ $(document).ready(function() {
             closeSettings();
         }
         editor[$('.active').index()].focus();
-    });
-    //tidy up code
-    $('.tidy-up').click(function() {
-        var text = editor[$('.active').index()].getValue();
-        var beautified;
-        if ($('.active').find('.title').val().indexOf('.html') > -1) {
-            beautified = html_beautify(text, {
-                indent_size: config.tabSize
-            });
-        } else if ($('.active').find('.title').val().indexOf('.css') > -1) {
-            beautified = css_beautify(text, {
-                indent_size: config.tabSize
-            });
-        } else if ($('.active').find('.title').val().indexOf('.js') > -1) {
-            beautified = js_beautify(text, {
-                indent_size: config.tabSize
-            });
-        } else {
-            beautified = js_beautify(text, {
-                indent_size: config.tabSize
-            });
-        }
-        editor[$('.active').index()].setValue(beautified);
     });
     //open settings
     $('.settings-button').click(function() {
@@ -398,7 +497,7 @@ $(document).ready(function() {
 
     function autoSave(g) {
         editor[g].on('change', function() {
-            $('.active .close').text('edit');
+            $('.active .close').text('fiber_manual_record');
             $('.active .close').addClass('edit');
         });
     }
@@ -434,12 +533,8 @@ $(document).ready(function() {
     }
 
     function reloadDirEntries(entry) {
-        var parentDirectory = splitAndReturn(entry.fullPath, '/', 1);
         directories.push({
-            name: entry.name,
-            path: entry.fullPath,
-            entry: entry,
-            parentDirectory: parentDirectory
+            entry: entry
         });
         displayDataDir(directories.length - 1);
         loadDirEntry(entry);
@@ -457,13 +552,13 @@ $(document).ready(function() {
             autoSave(index);
         });
     }
-    var ink, d, x, y;
     $(document).on('click', '.tab', function(e) {
         e.stopPropagation();
         if ($(this).hasClass('noclick')) {
             $(this).removeClass('noClick');
         } else {
             //material design click animation
+            var ink, d, x, y;
             var elem = $(this);
             if (elem.find('.ink').length === 0) {
                 elem.prepend('<div class="ink"></div>');
@@ -558,7 +653,8 @@ $(document).ready(function() {
                 font: 'monospace',
                 fontSize: '14px',
                 tabSize: 4,
-                softWrap: true
+                softWrap: true,
+                library: 'jquery.min.js'
             };
         }
         if (tabIndex === 0 && tabLength == 1) {
@@ -583,7 +679,7 @@ $(document).ready(function() {
     $(document).on('click', '.close', function(e) {
         e.stopImmediatePropagation();
         e.stopPropagation();
-        if ($(this).text() == 'edit') {
+        if ($(this).text() == 'fiber_manual_record') {
             openSaveBox($(this));
         } else {
             closeTab($(this));
@@ -644,24 +740,29 @@ $(document).ready(function() {
             editor[$('.active').index()].focus();
         });
     }
-    var found;
+    var found, timer;
     $('.search-bar').on('keyup focus', function() {
         text = $('.search-bar').val();
         cm = editor[$('.active').index()];
         state = getSearchState(cm);
-        var cursor = getSearchCursor(cm, text, cm.getCursor("from"));
+        var cursor = getSearchCursor(cm, text, cm.getCursor('from'));
         startSearch(cm, state, text);
         if (found === 0) {
             cursor.findNext();
             cm.scrollIntoView({
                 from: cursor.from(),
                 to: cursor.to()
+            }, 100, function() {
+                clearTimeout(timer);
+                timer = setTimeout(function() {
+                    if ($('.cm-searching').length === 0 && text !== '') {
+                        $('.search-bar').css('box-shadow', 'inset 0px -1px 0px 0px rgba(239, 37, 37, 0.58)');
+                    } else {
+                        $('.search-bar').css('box-shadow', 'inset 0px -1px 0px 0px rgba(0, 0, 0, 0.1)');
+
+                    }
+                }, 20);
             });
-            if ($('.cm-searching', '.CodeMirror:eq(' + $('.active').index() + ') .CodeMirror-lines .CodeMirror-code div').length === 0 && text !== '') {
-                $(this).css('box-shadow', 'inset 0px -1px 0px 0px rgba(239, 37, 37, 0.58)');
-            } else {
-                $(this).css('box-shadow', 'inset 0px -1px 0px 0px rgba(0, 0, 0, 0.1)');
-            }
             found = 1;
         } else {
             found = 0;
@@ -730,9 +831,9 @@ $(document).ready(function() {
             $('.open').click();
         }
         if (e.ctrlKey && e.keyCode == 80 || e.metaKey && e.keyCode == 80) {
-            if($('.settings-container').is(':visible')){
+            if ($('.settings-container').is(':visible')) {
                 closeSettings();
-            }else{
+            } else {
                 openSettings();
             }
         }
@@ -764,7 +865,7 @@ $(document).ready(function() {
     function openOverflow() {
         $('.menu').show().stop().animate({
             opacity: '1',
-            height: '420px'
+            height: '360px'
         }, 200);
     }
 
@@ -800,7 +901,8 @@ $(document).ready(function() {
                 font: 'monospace',
                 fontSize: '14px',
                 tabSize: 4,
-                softWrap: true
+                softWrap: true,
+                library: 'jquery.min.js'
             };
         }
         loadSettings(prefs);
@@ -844,7 +946,8 @@ $(document).ready(function() {
                             font: 'monospace',
                             fontSize: '14px',
                             tabSize: 4,
-                            softWrap: true
+                            softWrap: true,
+                            library: 'jquery.min.js'
                         };
                     }
                     loadSettings(prefs);
@@ -949,19 +1052,15 @@ $(document).ready(function() {
             exclusive: true
         }, function(dirEntry) {
             rootDirs.push(chrome.fileSystem.retainEntry(dirEntry));
-            var parentDirectory = splitAndReturn(dirEntry.fullPath, '/', 2);
             directories.push({
-                name: dirEntry.name,
-                path: dirEntry.fullPath,
-                entry: dirEntry,
-                parentDirectory: parentDirectory
+                entry: dirEntry
             });
             var div = document.createElement('div');
             var thisName = dirEntry.name;
             thisName = replaceName(thisName);
             div.className = thisName + ' folder';
             div.setAttribute('path', dirEntry.fullPath);
-            div.innerHTML = '<div class="material-icons">folder</div>' + dirEntry.name + '<ul class="' + thisName + 'ul"></ul>';
+            div.innerHTML = '<div class="material-icons">book</div>' + dirEntry.name + '<ul class="' + thisName + 'ul"></ul>';
             $('.projects').append(div);
             $('.projects').children().last().children().last().hide();
             closeProjectDialog();
@@ -1015,6 +1114,14 @@ $(document).ready(function() {
         }
     }
 
+    function isRoot(entryPath) {
+        if (entryPath.split('/').length == 2) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     function displayDataDir(x) {
         var thisName = directories[x].entry.name;
         var path = directories[x].entry.fullPath;
@@ -1030,9 +1137,15 @@ $(document).ready(function() {
         thisName = replaceName(thisName);
 
         var div = document.createElement('div');
+        var material;
         div.className = thisName + ' folder';
         div.setAttribute('path', directories[x].entry.fullPath);
-        div.innerHTML = '<div class="material-icons">folder</div>' + directories[x].entry.name + '<ul style="display:none;" class="' + thisName + 'ul"></ul>';
+        if (isRoot(directories[x].entry.fullPath)) {
+            material = '<div class="material-icons">book</div>';
+        } else {
+            material = '<div class="material-icons">folder</div>';
+        }
+        div.innerHTML = material + directories[x].entry.name + '<ul style="display:none;" class="' + thisName + 'ul"></ul>';
         path.shift();
         path.forEach(function(value, index, array) {
             path[index] = value + ' .' + value + 'ul';
@@ -1080,9 +1193,10 @@ $(document).ready(function() {
 
         //create div
         var div = document.createElement('div');
+        var material = getMaterial(files[y].entry.name, true);
         div.className = name + ' file';
         div.setAttribute('path', files[y].entry.fullPath);
-        div.innerHTML = '<div class="material-icons">insert_drive_file</div>' + files[y].entry.name;
+        div.innerHTML = material + files[y].entry.name;
         path.shift();
         path.forEach(function(value, index, array) {
             if (index === array.length - 1) {
@@ -1111,23 +1225,25 @@ $(document).ready(function() {
         }
     }
 
-    function showPreLoad(text) {
+    function showPreLoad(text, callback, entry) {
         $('.loading-text').text('Loading ' + text);
-        $('.preload').show().velocity({
+        $('.preload').css('top', '100%');
+        $('.preload').show().stop().animate({
+            top: '0',
             opacity: '1'
-        }, {
-            duration: 200
-        });
+        }, 500);
+
+        if (callback) {
+            callback(entry);
+        }
     }
 
     function hidePreLoad() {
-        $('.preload').stop().velocity({
-            opacity: '0'
-        }, {
-            duration: 600,
-            complete: function() {
-                $(this).hide();
-            }
+        $('.preload').stop().animate({
+            opacity: '0',
+            top: '100%'
+        }, 600, function() {
+            $(this).hide();
         });
     }
 
@@ -1138,9 +1254,8 @@ $(document).ready(function() {
                 for (var gg = 0; gg < results.length; gg++) {
                     var data = results[gg];
                     if (data.isDirectory) {
-                        var parentDirectory = splitAndReturn(data.fullPath, '/', 2);
                         directories.push({
-                            entry: data,
+                            entry: data
                         });
                         displayDataDir(directories.length - 1);
                         loadDirEntry(data);
@@ -1156,6 +1271,16 @@ $(document).ready(function() {
         };
         readEntries();
     }
+
+    function afterPreLoad(dirEntry) {
+        docFrag.innerHTML = '';
+        reloadDirEntries(dirEntry);
+        setTimeout(function() {
+            $('.projects').append(docFrag.children);
+            sortDirect();
+            hidePreLoad();
+        }, 1000);
+    }
     $('.open-dir').click(function() {
         chrome.fileSystem.chooseEntry({
             type: 'openDirectory'
@@ -1166,14 +1291,7 @@ $(document).ready(function() {
                 var isInRoot;
                 if (rootDirs.length === 0) {
                     rootDirs.push(chrome.fileSystem.retainEntry(dirEntry));
-                    showPreLoad(dirEntry.name);
-                    docFrag.innerHTML = '';
-                    reloadDirEntries(dirEntry);
-                    setTimeout(function() {
-                        $('.projects').append(docFrag.children);
-                        sortDirect();
-                        hidePreLoad();
-                    }, 1000);
+                    showPreLoad(dirEntry.name, afterPreLoad, dirEntry);
                 } else {
                     for (var i = 0; i < rootDirs.length; i++) {
                         chrome.fileSystem.restoreEntry(rootDirs[i], function(entry) {
@@ -1205,13 +1323,23 @@ $(document).ready(function() {
         e.stopPropagation();
         if ($(this).children('ul').is(':visible')) {
             $(this).children('ul').hide();
-            $(this).children().closest('.material-icons').text('folder');
+            if ($(this).children().closest('.material-icons').text() == 'book') {
+                $(this).children().closest('.material-icons').text('book');
+            } else if ($(this).children().closest('.material-icons').text() == 'folder_open') {
+                $(this).children().closest('.material-icons').text('folder');
+            }
             $(this).css('color', 'rgba(255,255,255,0.8)');
         } else {
             $(this).children('ul').show();
-            $(this).children().closest('.material-icons').text('folder_open');
+            if ($(this).children().closest('.material-icons').text() == 'book') {
+                $(this).children().closest('.material-icons').text('book');
+            } else if ($(this).children().closest('.material-icons').text() == 'folder') {
+                $(this).children().closest('.material-icons').text('folder_open');
+            }
             $(this).css('color', '#FFFFFF');
         }
+
+        folderToRemove = $(this);
     });
     $(document).on('click', '.projects ul', function(e) {
         e.stopPropagation();
@@ -1248,9 +1376,15 @@ $(document).ready(function() {
     });
     //context menu
     function contextMenuOn(event) {
+        var top = event.pageY,
+            left = event.pageX;
+        var fileHeight = $('.contextmenu').height();
+        if (top + fileHeight > $(window).height()) {
+            top = top - fileHeight;
+        }
         $('.contextmenu').show().css({
-            top: event.pageY + 'px',
-            left: event.pageX - 20 + 'px',
+            top: top + 'px',
+            left: left - 20 + 'px',
             backgroundColor: shadeRGBColor($('.sidebar').css('background-color'), -0.2)
         }).stop().animate({
             opacity: '1'
@@ -1266,9 +1400,15 @@ $(document).ready(function() {
     }
 
     function folderContext(event) {
+        var top = event.pageY,
+            left = event.pageX;
+        var folderHeight = $('.folder-contextmenu').height();
+        if (top + folderHeight > $(window).height()) {
+            top = top - folderHeight;
+        }
         $('.folder-contextmenu').show().css({
-            top: event.pageY + 'px',
-            left: event.pageX - 20 + 'px',
+            top: top + 'px',
+            left: left - 20 + 'px',
             backgroundColor: shadeRGBColor($('.sidebar').css('background-color'), -0.2)
         }).stop().animate({
             opacity: '1'
@@ -1446,6 +1586,40 @@ $(document).ready(function() {
             $(input).focus();
         }
     }
+
+    function getMaterial(name, html) {
+        var images = ['.png', '.jpg', '.jpeg', '.tiff', '.giff', '.exiff'];
+        var sound = ['.wav', '.mp3', '.aiff', '.wma', '.m3u', '.au'];
+        var fonts = ['.woff', '.ttf', '.woff2', '.eot', '.otf', '.svg'];
+        var material;
+
+        var extension = splitAndReturn(name, '.', 1);
+        extension = '.' + extension.toLowerCase();
+
+        if (html == true) {
+            if (images.indexOf(extension) > -1) {
+                material = '<div class="material-icons">photo</div>';
+            } else if (sound.indexOf(extension) > -1) {
+                material = '<div class="material-icons">volume_up</div>';
+            } else if (fonts.indexOf(extension) > -1) {
+                material = '<div class="material-icons">text_format</div>';
+            } else {
+                material = '<div class="material-icons">insert_drive_file</div>';
+            }
+        } else {
+            if (images.indexOf(extension) > -1) {
+                material = 'photo';
+            } else if (sound.indexOf(extension) > -1) {
+                material = 'volume_up';
+            } else if (fonts.indexOf(extension) > -1) {
+                material = 'text_format';
+            } else {
+                material = 'insert_drive_file';
+            }
+        }
+
+        return material;
+    }
     $(document).on('contextmenu', '.projects .file', function(e) {
         e.stopPropagation();
         e.preventDefault();
@@ -1491,9 +1665,8 @@ $(document).ready(function() {
                 for (var i = 0; i < results.length; i++) {
                     var data = results[i];
                     if (data.isDirectory) {
-                        var parentDirectory = splitAndReturn(data.fullPath, '/', 2);
                         directories.push({
-                            entry: data,
+                            entry: data
                         });
                         reloadLoadedEntries(data);
                     } else {
@@ -1579,8 +1752,11 @@ $(document).ready(function() {
         cwd.getFile(src, {}, function(fileEntry) {
             fileEntry.moveTo(cwd, newName, function(newFileEntry) {
                 var nameForClass = replaceName(newFileEntry.name);
+                var material = getMaterial(newFileEntry.name, false);
                 fileToRemove.attr('class', nameForClass + ' file');
                 fileToRemove.attr('path', newFileEntry.fullPath);
+                fileToRemove.find('.material-icons').first().text(material);
+                fileToRemove.get(0).childNodes[1].nodeValue = newFileEntry.name;
                 oldFileEntry.entry = newFileEntry;
                 if (isTab) {
                     changeTab(editIndex, newName, newFileEntry.fullPath);
@@ -1636,10 +1812,8 @@ $(document).ready(function() {
             projectFileEntry = files.find(getMatchingEntry);
             if (checkTabs(contextMenuName, projectFileEntry.entry.fullPath) === true) {
                 rename(projectDirEntry, projectFileEntry.entry.name, newName, projectFileEntry, fileToRemove, true);
-                fileToRemove.get(0).childNodes[1].nodeValue = newName;
             } else {
                 rename(projectDirEntry, projectFileEntry.entry.name, newName, projectFileEntry, fileToRemove, false);
-                fileToRemove.get(0).childNodes[1].nodeValue = newName;
             }
             closeRenameFileDialog();
             editor[$('.active').index()].focus();
@@ -1670,7 +1844,7 @@ $(document).ready(function() {
         if (path.indexOf(folderContextMenuPath) > -1) {
             $('.folder-contextmenu .folder-rename').hide();
             $('.folder-contextmenu .folder-removefromproject').show();
-            
+
         } else {
             $('.folder-contextmenu .folder-rename').show();
             $('.folder-contextmenu .folder-removefromproject').hide();
@@ -1808,13 +1982,8 @@ $(document).ready(function() {
                 create: true,
                 exclusive: true
             }, function(dirEntry) {
-                var parentDirectory = dirEntry.fullPath.split('/');
-                parentDirectory = parentDirectory[parentDirectory.length - 2];
                 directories.push({
-                    name: dirEntry.name,
-                    path: dirEntry.fullPath,
-                    entry: dirEntry,
-                    parentDirectory: parentDirectory
+                    entry: dirEntry
                 });
                 var thisName = dirEntry.name;
                 thisName = replaceName(thisName);
@@ -1912,9 +2081,11 @@ $(document).ready(function() {
                 savedFileEntry = fileEntry;
                 //create div
                 var div = document.createElement('div');
+                var material = getMaterial(fileEntry.name, true);
+
                 div.className = name + ' file';
                 div.setAttribute('path', fileEntry.fullPath);
-                div.innerHTML = '<div class="material-icons">insert_drive_file</div>' + fileEntry.name;
+                div.innerHTML = material + fileEntry.name;
                 folderToRemove.children().last().append(div);
                 closeNewFileDialog();
             });
@@ -2042,6 +2213,29 @@ $(document).ready(function() {
     });
     $('.save-as').click(function() {
         ExportToDisk();
+    });
+
+    $('.tidy-up').click(function() {
+        var text = editor[$('.active').index()].getValue();
+        var beautified;
+        if ($('.active .title').val().indexOf('.html') > -1) {
+            beautified = html_beautify(text, {
+                indent_size: config.tabSize
+            });
+        } else if ($('.active .title').val().indexOf('.css') > -1) {
+            beautified = css_beautify(text, {
+                indent_size: config.tabSize
+            });
+        } else if ($('.active .title').val().indexOf('.js') > -1) {
+            beautified = js_beautify(text, {
+                indent_size: config.tabSize
+            });
+        } else {
+            beautified = js_beautify(text, {
+                indent_size: config.tabSize
+            });
+        }
+        editor[$('.active').index()].setValue(beautified);
     });
     //drag and drop
     var dnd = new DnDFileController('body', function(data) {
@@ -2196,7 +2390,7 @@ $(document).ready(function() {
                     }
                 });
                 var newProjectDir;
-                if (projectDir === undefined) {
+                if (projectDir === undefined || projectDir === null) {
                     newProjectDir = '';
                 } else {
                     newProjectDir = chrome.fileSystem.retainEntry(projectDir);
@@ -2246,7 +2440,8 @@ $(document).ready(function() {
                     font: 'monospace',
                     fontSize: '14px',
                     tabSize: 4,
-                    softWrap: true
+                    softWrap: true,
+                    library: 'jquery.min.js'
                 };
                 loadAutoTab();
                 loadSettings(prefs);
@@ -2275,7 +2470,7 @@ $(document).ready(function() {
                     if ($('.tab').eq(a).attr('data') === '') {
                         fileDirs[a] = '';
                     }
-                    if (state[a] == 'edit') {
+                    if (state[a] == 'fiber_manual_record') {
                         $('.tab').eq(a).find('.material-icons').addClass('edit');
                     }
                     $('.tab').eq(a).find('.material-icons').text(state[a]);
@@ -2298,7 +2493,7 @@ $(document).ready(function() {
                                     });
                                 });
                             }
-                            if (chosenDir != 'newProjectDir') {
+                            if (chosenDir != 'newProjectDir' && chosenDir != '') {
                                 chrome.fileSystem.isRestorable(chosenDir, function(isRestorable) {
                                     chrome.fileSystem.restoreEntry(chosenDir, function(entry) {
                                         setChosenDirInd(entry);
@@ -2362,7 +2557,6 @@ $(document).ready(function() {
     });
     $(document).delegate('.app-windowbar-maximize', 'click', function() {
         editor[$('.active').index()].focus();
-        $('.dialog-input').focus();
         if (chrome.app.window.current().isMaximized()) {
             chrome.app.window.current().restore();
         } else {

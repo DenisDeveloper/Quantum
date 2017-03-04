@@ -40,19 +40,36 @@
         </div>
         <div class="settings">
             <div class="settingdiv">
+            	<div class="settingtitle">Libraries</div>
+                <div class="description">Add an open-source library to your current folder.</div>
+                <span>Ooops! You're offline, check your internet connection.</span>
+                <div class="selector-container selector-library">jquery.min.js
+                	<div class="material-icons">arrow_drop_down</div>
+                </div>
+                <div class="dropdown-library dropdown">
+                	<div class="library">angular.min.js</div>
+                    <div class="library">backbone.min.js</div>
+                    <div class="library">ember.min.js</div>
+                    <div class="library">jquery.min.js</div>
+                	<div class="library">react.min.js</div>
+                	<div class="library">react-dom.min.js</div>
+                    <div class="library">three.min.js</div>
+                </div>
+            </div>
+            <div class="settingdiv">
                 <div class="settingtitle">Theme</div>
                 <div class="description">The color palette used to style the editor and tabs.</div>
                 <div class="selector-container selector-theme">material
                     <div class="material-icons">arrow_drop_down</div>
                 </div>
                 <div class="dropdown-theme dropdown">
-                    <div class="theme">birds-of-paradise</div>
+                    <div class="theme">birds of paradise</div>
                     <div class="theme">darkpastel</div>
-                    <div class="theme">friendship-bracelet</div>
+                    <div class="theme">friendship bracelet</div>
                     <div class="theme">material</div>
-                    <div class="theme">monokai-sublime</div>
+                    <div class="theme">monokai sublime</div>
                     <div class="theme">purplenight</div>
-                    <div class="theme">tomorrow-night-bright</div>
+                    <div class="theme">tomorrow night bright</div>
                     <div class="theme">zenburnesque</div>
                 </div>
             </div>
@@ -76,7 +93,7 @@
             </div>
             <div class="settingdiv">
                 <div class="settingtitle">Font Size</div>
-                <div class="description">Text size of font in the editor.</div>
+                <div class="description">Size of the font in the editor.</div>
                 <div class="selector-container selector-font-size">14px
                     <div class="material-icons">arrow_drop_down</div>
                 </div>
@@ -112,6 +129,10 @@
                     <div class="wrap">wrap</div>
                 </div>
             </div>
+            <div class="settingdiv tidy-up">
+            	<div class="settingtitle">Tidy Up</div>
+                <div class="description">Clean up the code in the active tab.</div>
+            </div>
         </div>
     </div>
     <div class="dialogue">
@@ -135,8 +156,6 @@
             <div class="material-icons">save</div>Save</div>
         <div class="menu-li save-as">
             <div class="material-icons">file_download</div>Save As</div>
-        <div class="menu-li tidy-up">
-            <div class="material-icons">format_paint</div>Tidy Up</div>
         <div class="menu-li settings-button">
             <div class="material-icons">settings</div>Settings</div>
     </div>
@@ -189,15 +208,15 @@
         </div>
     </div>
     <div class="contextmenu">
-        <div class="rename">Rename</div>
-        <div class="remove">Remove</div>
+        <div class="rename"><div class="material-icons">format_quote</div>Rename</div>
+        <div class="remove"><div class="material-icons">delete</div>Remove</div>
     </div>
     <div class="folder-contextmenu">
-        <div class="folder-addfolder">New Folder</div>
-        <div class="folder-addfile">New File</div>
-        <div class="folder-rename">Rename Folder</div>
-        <div class="folder-remove">Remove Permanently</div>
-        <div class="folder-removefromproject">Remove from Projects</div>
+        <div class="folder-addfolder"><div class="material-icons">create_new_folder</div>New Folder</div>
+        <div class="folder-addfile"><div class="material-icons">note_add</div>New File</div>
+        <div class="folder-rename"><div class="material-icons">format_quote</div>Rename Folder</div>
+        <div class="folder-remove"><div class="material-icons">delete_forever</div>Remove Permanently</div>
+        <div class="folder-removefromproject"><div class="material-icons">delete</div>Remove from Projects</div>
     </div>
     <div class="new-project-dialogue">
         <div class="new-project-dialogue-title">New Project</div>

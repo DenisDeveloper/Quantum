@@ -20,7 +20,7 @@ body {
     cursor: default;
 }
 
-.contextmenu div {
+.contextmenu div:not(.material-icons) {
     width: 100%;
     height: 50%;
     line-height: 40px;
@@ -42,13 +42,21 @@ body {
     cursor: default;
 }
 
-.folder-contextmenu div {
+.folder-contextmenu div:not(.material-icons) {
     width: 100%;
     height: 40px;
     line-height: 40px;
     padding-left: 20px;
     box-sizing: border-box;
     display: block;
+    float: left;
+}
+
+.contextmenu .material-icons,
+.tab-contextmenu .material-icons,
+.folder-contextmenu .material-icons {
+    margin-right: 15px;
+    display: inline-block;
     float: left;
 }
 
@@ -60,10 +68,10 @@ body {
     position: absolute;
     z-index: 9999999;
     background-color: #37e0b7;
-    background-image:url('../imgs/background.png');
-    background-size:cover;
-    background-repeat:no-repeat;
-    background-position:center;
+    background-image: url('../imgs/background.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .getting-started .started-title {
@@ -144,7 +152,6 @@ body {
     position: absolute;
     margin-top: 10px;
     margin-left: -150px;
-    font-style: italic;
     color: rgba(0, 0, 0, 0.8);
 }
 
@@ -257,9 +264,9 @@ body {
 }
 
 .settings-container {
-    width: 40%;
+    width: 46%;
     height: 80%;
-    max-width: 420px;
+    max-width: 440px;
     max-height: 480px;
     top: 60%;
     left: 50%;
@@ -267,11 +274,10 @@ body {
     position: absolute;
     opacity: 0;
     z-index: 2000;
-    background-color: #FFF;
+    background-color: #263262;
+    color: #FFF;
     border-radius: 2px;
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
-    overflow-x: hidden;
-    padding-bottom: 20px;
     cursor: default;
 }
 
@@ -283,6 +289,20 @@ body {
     padding-left: 40px;
     padding-right: 40px;
     box-sizing: border-box;
+    position: fixed;
+    top: 0;
+}
+
+.settings-container .settings {
+    margin-top: 100px;
+    height: calc(100% - 100px);
+    overflow-x: hidden;
+    padding-bottom: 10px;
+    box-sizing: border-box;
+}
+
+.settings-container .top-title {
+    transition: all .2s ease-out;
 }
 
 .settings-container .top-title .material-icons {
@@ -300,6 +320,10 @@ body {
     padding-right: 40px;
 }
 
+.settings-container .settings .settingdiv:last-child {
+    cursor: pointer;
+}
+
 .settings-container .settings .settingdiv * {
     display: block;
 }
@@ -312,32 +336,45 @@ body {
 .settings-container .settings .settingdiv .description {
     margin-top: 10px;
     font-size: 14px;
-    color: rgba(0, 0, 0, 0.6);
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.settings-container .settings .settingdiv span {
+    margin-top: 10px;
+    color: #e6644d;
 }
 
 .settings-container .settings .selector-container {
     width: 100%;
     height: 40px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(197, 197, 197, 0.44);
     line-height: 40px;
     padding-left: 20px;
     box-sizing: border-box;
     margin-top: 20px;
+    border-radius: 2px;
+}
+
+.settings-container .settings .selector-container:not(.selector-library) {
     text-transform: capitalize;
 }
 
 .settings-container .settings .dropdown {
     width: 100%;
     height: 0px;
-    border-left: 1px solid rgba(0, 0, 0, 0.1);
-    border-right: 1px solid rgba(0, 0, 0, 0.1);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    margin-top: 0px;
+    border-left: 1px solid rgba(197, 197, 197, 0.44);
+    border-right: 1px solid rgba(197, 197, 197, 0.44);
+    border-bottom: 1px solid rgba(197, 197, 197, 0.44);
+    border-radius: 2px;
+    margin-top: -3px;
     float: left;
     padding-left: 20px;
     box-sizing: border-box;
-    text-transform: capitalize;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.settings-container .settings .dropdown:not(.dropdown-library) {
+    text-transform: capitalize;
 }
 
 .settings-container .settings .dropdown div {
@@ -349,6 +386,7 @@ body {
     float: right;
     font-size: 16px;
     margin-right: 10px;
+    color: rgba(197, 197, 197, 0.44);
 }
 
 .sidebar {
@@ -359,7 +397,6 @@ body {
     left: 0;
     margin-top: 30px;
     background-color: #222C31;
-    box-shadow:inset -3px 0px 5px rgba(0, 0, 0, 0.10);
     position: absolute;
     z-index: 0;
 }
@@ -374,6 +411,7 @@ body {
     font-size: 12px;
     color: rgba(255, 255, 255, 0.8);
     text-transform: uppercase;
+    overflow: hidden;
 }
 
 .sidebar .projects {
@@ -409,20 +447,21 @@ body {
     float: left;
 }
 
-.sidebar .add-newproject{
+.sidebar .add-newproject {
     width: 50px;
     height: 50px;
     bottom: 0;
-    right:0;
-    margin:25px;
+    right: 0;
+    margin: 25px;
     text-align: center;
     line-height: 50px;
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
     position: absolute;
     border-radius: 100%;
-    color: rgba(255,255,255,0.8);
+    color: rgba(255, 255, 255, 0.8);
     z-index: 200;
 }
+
 .tabs {
     width: calc(100% - 320px);
     height: 50px;
@@ -546,7 +585,7 @@ body {
 .new-folder-dialogue,
 .new-project-dialogue,
 .rename-file-dialogue,
-.rename-folder-dialogue{
+.rename-folder-dialogue {
     width: 30%;
     height: auto;
     min-width: 300px;
@@ -569,23 +608,25 @@ body {
 .new-folder-dialogue input,
 .new-project-dialogue input,
 .rename-file-dialogue input,
-.rename-folder-dialogue input{
+.rename-folder-dialogue input {
     width: 100%;
     height: 40px;
     border: none;
     margin-top: 10px;
-    font-family:'Roboto';
+    font-family: 'Roboto';
     float: left;
     display: block;
-    box-shadow:inset 0px -1px 0px 0px #47bfa1;
+    box-shadow: inset 0px -1px 0px 0px #47bfa1;
     clear: both;
     outline: none;
     padding: 0;
-    transition:all .2s ease-out;
+    transition: all .2s ease-out;
 }
-.dialog-input::selection{
-    background-color:rgba(0,0,0,0.1);
+
+.dialog-input::selection {
+    background-color: rgba(0, 0, 0, 0.1);
 }
+
 .dialogue .dialogue-title,
 .remove-dialogue-title,
 .folder-remove-dialogue-title,
@@ -593,7 +634,7 @@ body {
 .new-folder-dialogue-title,
 .new-project-dialogue-title,
 .rename-file-dialogue-title,
-.rename-folder-dialogue-title{
+.rename-folder-dialogue-title {
     font-size: 18px;
     color: #000;
 }
@@ -614,12 +655,12 @@ body {
 .new-folder-buttons,
 .new-project-buttons,
 .rename-file-buttons,
-.rename-folder-buttons{
+.rename-folder-buttons {
     height: 40px;
     margin-top: 10px;
     float: right;
     margin-bottom: 10px;
-    font-family:'Roboto Med';
+    font-family: 'Roboto Med';
 }
 
 .dialogue .buttons-dialogue div,
@@ -629,7 +670,7 @@ body {
 .new-folder-buttons div,
 .new-project-buttons div,
 .rename-file-buttons div,
-.rename-folder-buttons div{
+.rename-folder-buttons div {
     width: auto;
     height: 40px;
     font-size: 14px;
@@ -641,41 +682,41 @@ body {
     transition: all .2s ease-out;
     margin-right: 10px;
     border-radius: 2px;
-    padding-left:10px;
-    padding-right:10px;
+    padding-left: 10px;
+    padding-right: 10px;
     color: #138c76;
 }
 
-.new-project-dialogue .chooseDir{
-    width:100%;
-    height:40px;
-    background-color:#ececec;
-    margin-top:20px;
-    border-radius:2px;
-    text-align:center;
-    line-height:40px;
-    float:left;
-    font-family:'Roboto';
+.new-project-dialogue .chooseDir {
+    width: 100%;
+    height: 40px;
+    background-color: #ececec;
+    margin-top: 20px;
+    border-radius: 2px;
+    text-align: center;
+    line-height: 40px;
+    float: left;
+    font-family: 'Roboto';
 }
-.new-project-dialogue .chosenDir{
-    width:100%;
-    height:40px;
-    text-align:left;
-    line-height:40px;
-    float:left;
-    margin-top:10px;
+
+.new-project-dialogue .chosenDir {
+    width: 100%;
+    height: 40px;
+    text-align: left;
+    line-height: 40px;
+    float: left;
+    margin-top: 10px;
     font-family: 'Roboto';
 }
 
 .search-container {
-	width: 100%;
+    width: 100%;
     height: 100px;
     bottom: -100px;
     right: 0;
     opacity: 0;
     position: absolute;
     z-index: 100;
-    box-shadow: 0px -3px 11px rgba(0, 0, 0, 0.16);
     background-color: inherit;
     z-index: 200;
 }
@@ -703,7 +744,7 @@ body {
     font-size: 12px;
     font-family: 'Roboto';
     background-color: inherit;
-    color: rgba(255,255,255,0.8);
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .search-container .searchbars input::selection {
@@ -726,14 +767,14 @@ body {
     color: rgba(255, 255, 255, 0.7);
     transition: all .2s ease-out;
     font-family: 'Roboto Med';
-    text-transform:uppercase;
+    text-transform: uppercase;
     cursor: default;
     font-size: 12px;
 }
 
 .search-container .buttons div:hover,
 .search-container .buttons-two div:hover {
-    background-color: rgba(255,255,255,0.03);
+    background-color: rgba(255, 255, 255, 0.03);
 }
 
 .search-container .buttons-two {
@@ -769,10 +810,11 @@ body {
 }
 
 @font-face {
-    font-family:'Roboto Med';
-    font-style:normal;
+    font-family: 'Roboto Med';
+    font-style: normal;
     src: url('../font/Roboto-Medium.ttf');
 }
+
 @font-face {
     font-family: 'Material Icons';
     font-style: normal;

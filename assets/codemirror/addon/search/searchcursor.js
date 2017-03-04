@@ -23,41 +23,8 @@
     // It takes a position and a direction, and returns an object
     // describing the next occurrence of the query, or null if no
     // more matches were found.
-    if (typeof query != "string") { // Regexp match
-      if (!query.global) query = new RegExp(query.source, query.ignoreCase ? "ig" : "g");
-      this.matches = function(reverse, pos) {
-        if (reverse) {
-          query.lastIndex = 0;
-          var line = doc.getLine(pos.line).slice(0, pos.ch), cutOff = 0, match, start;
-          for (;;) {
-            query.lastIndex = cutOff;
-            var newMatch = query.exec(line);
-            if (!newMatch) break;
-            match = newMatch;
-            start = match.index;
-            cutOff = match.index + (match[0].length || 1);
-            if (cutOff == line.length) break;
-          }
-          var matchLen = (match && match[0].length) || 0;
-          if (!matchLen) {
-            if (start == 0 && line.length == 0) {match = undefined;}
-            else if (start != doc.getLine(pos.line).length) {
-              matchLen++;
-            }
-          }
-        } else {
-          query.lastIndex = pos.ch;
-          var line = doc.getLine(pos.line), match = query.exec(line);
-          var matchLen = (match && match[0].length) || 0;
-          var start = match && match.index;
-          if (start + matchLen != line.length && !matchLen) matchLen = 1;
-        }
-        if (match && matchLen)
-          return {from: Pos(pos.line, start),
-                  to: Pos(pos.line, start + matchLen),
-                  match: match};
-      };
-    } else { // String query
+
+    if(typeof query === 'string'){ // String query
       var origQuery = query;
       if (caseFold) query = query.toLowerCase();
       var fold = caseFold ? function(str){return str.toLowerCase();} : function(str){return str;};

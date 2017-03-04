@@ -9682,7 +9682,7 @@
                     clientWidth: dv(this)
                 }
             },
-            scrollIntoView: dh(function(gQ, gR) {
+            scrollIntoView: dh(function(gQ, gR, callback) {
                 if (gQ == null) {
                     gQ = {
                         from: this.doc.sel.primary().head,
@@ -9716,6 +9716,10 @@
                 } else {
                     var gP = H(this, Math.min(gQ.from.left, gQ.to.left), Math.min(gQ.from.top, gQ.to.top) - gQ.margin, Math.max(gQ.from.right, gQ.to.right), Math.max(gQ.from.bottom, gQ.to.bottom) + gQ.margin);
                     this.scrollTo(gP.scrollLeft, gP.scrollTop)
+                }
+                
+                if(callback){
+                    callback();
                 }
             }),
             setSize: dh(function(gR, gP) {

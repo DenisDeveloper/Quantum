@@ -1,6 +1,6 @@
-/* Based on Sublime Text's monokai-sublime theme */
+/* Based on Sublime Text's Monokai theme */
 
-.cm-s-monokai-sublime.CodeMirror { background: #272822; color: #f8f8f2; height:100%; }
+.cm-s-monokai-sublime.CodeMirror { background: #272822; color: #f8f8f2; }
 .cm-s-monokai-sublime div.CodeMirror-selected { background: #49483E; }
 .cm-s-monokai-sublime .CodeMirror-line::selection, .cm-s-monokai-sublime .CodeMirror-line > span::selection, .cm-s-monokai-sublime .CodeMirror-line > span > span::selection { background: rgba(73, 72, 62, .99); }
 .cm-s-monokai-sublime .CodeMirror-line::-moz-selection, .cm-s-monokai-sublime .CodeMirror-line > span::-moz-selection, .cm-s-monokai-sublime .CodeMirror-line > span > span::-moz-selection { background: rgba(73, 72, 62, .99); }
@@ -30,10 +30,9 @@
 .cm-s-monokai-sublime span.cm-error { background: #f92672; color: #f8f8f0; }
 
 .cm-s-monokai-sublime .CodeMirror-activeline-background { background: #373831; }
-.cm-s-monokai-sublime span.CodeMirror-matchingbracket {
+.cm-s-monokai-sublime .CodeMirror-matchingbracket {
   text-decoration: underline;
   color: white !important;
 }
-
 .active-monokai-sublime { box-shadow: inset 0px -2px 0px 0px #c2b964 ; opacity: 1 !important;}
 .active-monokai-sublime .material-icons { color: #c2b964; }
