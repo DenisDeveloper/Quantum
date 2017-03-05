@@ -1,12 +1,12 @@
-//Quantum v3.7
+//Quantum v3.8
 //Author: Carlos E. Santos
-$(document).ready(function() {
+$(document).ready(function () {
     function preLoad() {
         $('.preload').stop().velocity({
             opacity: '0'
         }, {
             duration: 800,
-            complete: function() {
+            complete: function () {
                 $(this).hide();
             }
         });
@@ -33,8 +33,8 @@ $(document).ready(function() {
         "Please wait...the bits are breeding"
     ];
     $('.loading-text').text(loadTexts[Math.round(Math.random() * (loadTexts.length - 1))]);
-    loadData(launchData);
     $('.windowBar').initializeWindowBar('#000000');
+    loadData(launchData);
     //hide elements from view
     $('.menu, .dropdown, .settings-container, .bg, .dialogue, .search-container, .contextmenu, .folder-contextmenu, .remove-dialogue, .folder-remove-dialogue, .new-file-dialogue, .new-folder-dialogue, .new-project-dialogue, .rename-folder-dialogue, .rename-file-dialogue, .settingdiv span').hide();
     //define global variables
@@ -65,6 +65,7 @@ $(document).ready(function() {
         matchBrackets: true,
         autoCloseTags: true,
         autoCloseBrackets: true,
+        historyEventDelay: 400,
         tabSize: 4,
         indentUnit: 4,
         foldGutter: true,
@@ -74,6 +75,9 @@ $(document).ready(function() {
         mode: 'text/plain'
     };
 
+    function focusEditor() {
+        editor[$('.active').index()].focus();
+    }
     //settings
     //dropdown
     function openDropDown(dropdown) {
@@ -82,7 +86,7 @@ $(document).ready(function() {
         if (dropdown.is(':visible')) {
             dropdown.stop().animate({
                 height: '0px'
-            }, 200, function() {
+            }, 200, function () {
                 $(this).hide();
             });
         } else {
@@ -91,7 +95,7 @@ $(document).ready(function() {
             }, 200);
         }
     }
-    $(document).on('click', '.selector-container', function() {
+    $(document).on('click', '.selector-container', function () {
         var thisDropdown = $(this).attr('class').split(' ');
         thisDropdown = thisDropdown[thisDropdown.length - 1];
         var realDropdown = thisDropdown.replace('selector-', '');
@@ -141,7 +145,6 @@ $(document).ready(function() {
     function loadColor(color) {
         $('.sidebar').css('background-color', shadeRGBColor(color, -0.2));
         $('.workspace, body').css('background-color', color);
-        $('.add-newproject').css('background-color', shadeRGBColor($('.active').css('box-shadow').replace(/^.*(rgba?\([^)]+\)).*$/, '$1'), -0.4));
         $('.windowBar').css('background-color', shadeRGBColor(color, 0.1));
         $('.settings-container').css('background-color', shadeRGBColor(color, -0.1));
     }
@@ -182,7 +185,7 @@ $(document).ready(function() {
     function loadPrefs() {
         chrome.storage.local.get({
             settings: 'prefs'
-        }, function(item) {
+        }, function (item) {
             var setting = item.settings;
             if (setting == 'prefs' || setting === undefined || setting === null) {
                 prefs = {
@@ -217,7 +220,7 @@ $(document).ready(function() {
     function changeTabTheme(color) {
         $('.tabs, .overflow-menu').css('background-color', color);
     }
-    $('.settings').scroll(function() {
+    $('.settings').scroll(function () {
         var scroll = $(this).scrollTop();
         if (scroll !== 0) {
             $('.top-title').css('box-shadow', '0px 5px 9px 0px rgba(0,0,0,0.1)');
@@ -225,7 +228,7 @@ $(document).ready(function() {
             $('.top-title').css('box-shadow', 'none');
         }
     });
-    $(document).on('click', '.dropdown .theme', function() {
+    $(document).on('click', '.dropdown .theme', function () {
         var option = 'theme',
             value = $(this).text().replace(/ /g, '-');
         $('.active').attr('class', 'tab active active-' + value);
@@ -238,10 +241,10 @@ $(document).ready(function() {
         openDropDown($(this).parent());
         savePrefs();
     });
-    String.prototype.capitalizeFirstLetter = function() {
+    String.prototype.capitalizeFirstLetter = function () {
         return this.charAt(0).toUpperCase() + this.slice(1);
     };
-    $(document).on('click', '.dropdown .font-fam', function() {
+    $(document).on('click', '.dropdown .font-fam', function () {
         var font = $(this).text().capitalizeFirstLetter();
         setDDOP($('.selector-font'), $(this).text());
         $('.CodeMirror').css('font-family', font);
@@ -249,7 +252,7 @@ $(document).ready(function() {
         openDropDown($(this).parent());
         savePrefs();
     });
-    $(document).on('click', '.dropdown .font-size', function() {
+    $(document).on('click', '.dropdown .font-size', function () {
         var fontSize = $(this).text();
         setDDOP($('.selector-font-size'), fontSize);
         $('.CodeMirror').css('font-size', fontSize);
@@ -257,7 +260,7 @@ $(document).ready(function() {
         openDropDown($(this).parent());
         savePrefs();
     });
-    $(document).on('click', '.dropdown .tab-size', function() {
+    $(document).on('click', '.dropdown .tab-size', function () {
         var tabSize = Number($(this).text());
         setDDOP($('.selector-tab-size'), tabSize);
         setEditorOption('tabSize', tabSize);
@@ -267,7 +270,7 @@ $(document).ready(function() {
         openDropDown($(this).parent());
         savePrefs();
     });
-    $(document).on('click', '.dropdown .wrap', function() {
+    $(document).on('click', '.dropdown .wrap', function () {
         var wrap = $(this).text();
         if (wrap == 'none') {
             wrap = false;
@@ -282,18 +285,39 @@ $(document).ready(function() {
         savePrefs();
     });
 
-    function getFile(url, name) {
-        $.get(url, function(data) {
-            var folderUsed;
-            if (folderToRemove.find('.material-icons').first().text() == 'folder_open') {
-                folderUsed = folderToRemove;
+    function cleanPath(dirEntry) {
+        if (projectDir) {
+            if (typeof dirEntry === 'string') {
+                return dirEntry.replace(projectDir.fullPath, '');
             } else {
-                folderUsed = folderToRemove.parent().parent();
+                return dirEntry.fullPath.replace(projectDir.fullPath, '');
+            }
+        } else {
+            if (typeof dirEntry === 'string') {
+                return dirEntry;
+            } else {
+                return dirEntry.fullPath;
+            }
+        }
+    }
+
+    function getFile(url, name) {
+        $.get(url, function (data) {
+            var folderUsed;
+            if (!folderToRemove) {
+                folderUsed = $('.projects').children().first();
+            } else {
+                if (folderToRemove.find('.material-icons').first().text() == 'folder_open' || folderToRemove.find('.material-icons').first().text() == 'book') {
+                    folderUsed = folderToRemove;
+                } else {
+                    folderUsed = folderToRemove.parent().parent();
+                }
             }
             var dirName = folderUsed.clone().children().remove().end().text();
             var dirPath = folderUsed.attr('path');
-            var getMatchingDirEntry = function(obj) {
-                if (obj.entry.name == dirName && obj.entry.fullPath == dirPath) {
+            var getMatchingDirEntry = function (obj) {
+                var path = cleanPath(obj.entry);
+                if (obj.entry.name == dirName && path == dirPath) {
                     return obj;
                 }
             };
@@ -302,9 +326,9 @@ $(document).ready(function() {
             dirEntry.getFile(name, {
                 create: true,
                 exclusive: true
-            }, function(fileEntry) {
+            }, function (fileEntry) {
                 //write data to file  
-                fileEntry.createWriter(function(fileWriter) {
+                fileEntry.createWriter(function (fileWriter) {
                     var blob = new Blob([data]);
                     fileWriter.write(blob);
                 });
@@ -314,33 +338,39 @@ $(document).ready(function() {
                 var name = fileEntry.name;
                 name = replaceName(name);
                 name = name.replace(/\./g, '');
+                var path = cleanPath(fileEntry);
                 //create div
                 var div = document.createElement('div');
+                var material = getMaterial(fileEntry.name, true);
                 div.className = name + ' file';
-                div.setAttribute('path', fileEntry.fullPath);
-                div.innerHTML = '<div class="material-icons">insert_drive_file</div>' + fileEntry.name;
+                div.setAttribute('path', path);
+                div.innerHTML = material + fileEntry.name;
                 folderUsed.children().last().append(div);
                 savePrefs();
             });
         });
     }
-    $(document).on('click', '.dropdown .library', function() {
+    $(document).on('click', '.dropdown .library', function () {
         var name = $(this).text();
         var folderUsed;
-        if (folderToRemove.find('.material-icons').first().text() == 'folder_open') {
-            folderUsed = folderToRemove;
+        if (!folderToRemove) {
+            folderUsed = $('.projects').children().first();
         } else {
-            folderUsed = folderToRemove.parent().parent();
+            if (folderToRemove.find('.material-icons').first().text() == 'folder_open' || folderToRemove.find('.material-icons').first().text() == 'book') {
+                folderUsed = folderToRemove;
+            } else {
+                folderUsed = folderToRemove.parent().parent();
+            }
         }
         var folderNames = [];
 
         openDropDown($(this).parent());
-        if (!folderUsed) {
+        if (!folderUsed || $('.projects').children().length === 0) {
             $('.settingdiv span').text('No folder selected. Click on the folder you wish to add ' + name + ' to in the projects section.');
             $('.settingdiv span').show();
         } else {
             var folderName = folderUsed.clone().children().remove().end().text();
-            folderUsed.children().last().children().each(function() {
+            folderUsed.children().last().children().each(function () {
                 var thisName = $(this).clone().children().remove().end().text();
                 folderNames.push(thisName);
             });
@@ -351,27 +381,27 @@ $(document).ready(function() {
                 } else {
                     setDDOP($('.selector-library'), name);
                     switch (name) {
-                        case 'jquery.min.js':
-                            getFile('https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js', name);
-                            break;
-                        case 'angular.min.js':
-                            getFile('https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.1/angular.min.js', name);
-                            break;
-                        case 'backbone.min.js':
-                            getFile('https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.3.3/backbone-min.js', name);
-                            break;
-                        case 'ember.min.js':
-                            getFile('https://cdnjs.cloudflare.com/ajax/libs/ember.js/2.11.2/ember.min.js', name);
-                            break;
-                        case 'react.min.js':
-                            getFile('https://cdnjs.cloudflare.com/ajax/libs/react/15.4.2/react.min.js', name);
-                            break;
-                        case 'react-dom.min.js':
-                            getFile('https://cdnjs.cloudflare.com/ajax/libs/react/15.4.2/react-dom.min.js', name);
-                            break;
-                        case 'three.min.js':
-                            getFile('https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js', name);
-                            break;
+                    case 'jquery.min.js':
+                        getFile('https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js', name);
+                        break;
+                    case 'angular.min.js':
+                        getFile('https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.1/angular.min.js', name);
+                        break;
+                    case 'backbone.min.js':
+                        getFile('https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.3.3/backbone-min.js', name);
+                        break;
+                    case 'ember.min.js':
+                        getFile('https://cdnjs.cloudflare.com/ajax/libs/ember.js/2.11.2/ember.min.js', name);
+                        break;
+                    case 'react.min.js':
+                        getFile('https://cdnjs.cloudflare.com/ajax/libs/react/15.4.2/react.min.js', name);
+                        break;
+                    case 'react-dom.min.js':
+                        getFile('https://cdnjs.cloudflare.com/ajax/libs/react/15.4.2/react-dom.min.js', name);
+                        break;
+                    case 'three.min.js':
+                        getFile('https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js', name);
+                        break;
                     }
                     $('.settingdiv span').hide();
                 }
@@ -397,20 +427,20 @@ $(document).ready(function() {
         $('.settings-container').stop().animate({
             top: '60%',
             opacity: '0'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
         $('.bg').stop().animate({
             opacity: '0'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
     }
-    $('.close-settings').click(function() {
+    $('.close-settings').click(function () {
         closeSettings();
-        editor[$('.active').index()].focus();
+        focusEditor();
     });
-    $('.bg').click(function() {
+    $('.bg').click(function () {
         if ($('.dialogue').is(':visible')) {
             closeSaveBox();
         } else {}
@@ -438,14 +468,14 @@ $(document).ready(function() {
         if ($('.settings-container').is(':visible')) {
             closeSettings();
         }
-        editor[$('.active').index()].focus();
+        focusEditor();
     });
     //open settings
-    $('.settings-button').click(function() {
+    $('.settings-button').click(function () {
         openSettings();
     });
     //check input so as not to leave document untitled
-    $(document).on('click', '.CodeMirror', function(e) {
+    $(document).on('click', '.CodeMirror', function (e) {
         if ($('.active .title').val() === '') {
             $('.active .title').val('untitled.txt');
         }
@@ -453,7 +483,7 @@ $(document).ready(function() {
     });
     //tabbed functionality
     //sortable tabs
-    Array.prototype.move = function(oldIndex, newIndex) {
+    Array.prototype.move = function (oldIndex, newIndex) {
         if (newIndex >= this.length) {
             var k = newIndex - this.length;
             while ((k--) + 1) {
@@ -467,13 +497,13 @@ $(document).ready(function() {
         distance: 20,
         tolerance: 'pointer',
         revert: true,
-        start: function(e, ui) {
+        start: function (e, ui) {
             e.stopImmediatePropagation();
             e.stopPropagation();
             $(this).attr('data-previndex', ui.item.index());
             $(this).addClass('noclick');
         },
-        stop: function(e, ui) {
+        stop: function (e, ui) {
             e.stopImmediatePropagation();
             e.stopPropagation();
             var newIndex = ui.item.index();
@@ -491,12 +521,12 @@ $(document).ready(function() {
             editor.move(oldIndex, newIndex);
             fileDirs.move(oldIndex, newIndex);
             refreshEditors();
-            editor[$('.active').index()].focus();
+            focusEditor();
         }
     }).disableSelection();
 
     function autoSave(g) {
-        editor[g].on('change', function() {
+        editor[g].on('change', function () {
             $('.active .close').text('fiber_manual_record');
             $('.active .close').addClass('edit');
         });
@@ -538,7 +568,7 @@ $(document).ready(function() {
         });
         displayDataDir(directories.length - 1);
         loadDirEntry(entry);
-        editor[$('.active').index()].focus();
+        focusEditor();
     }
 
     function loadAutoTab() {
@@ -547,12 +577,12 @@ $(document).ready(function() {
         editor[index] = CodeMirror.fromTextArea(document.getElementById('textarea' + index), config);
         setFileName('untitled.txt');
         fileDirs[index] = '';
-        setTimeout(function() {
+        setTimeout(function () {
             $('.active').click();
             autoSave(index);
         });
     }
-    $(document).on('click', '.tab', function(e) {
+    $(document).on('click', '.tab', function (e) {
         e.stopPropagation();
         if ($(this).hasClass('noclick')) {
             $(this).removeClass('noClick');
@@ -588,7 +618,7 @@ $(document).ready(function() {
             changeMode();
             savedFileEntry = fileDirs[$(this).index()];
             editor[$('.active').index()].refresh();
-            editor[$('.active').index()].focus();
+            focusEditor();
         }
     });
 
@@ -610,25 +640,25 @@ $(document).ready(function() {
         $('.dialogue').stop().animate({
             top: '60%',
             opacity: '0'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
         $('.bg').stop().animate({
             opacity: '0'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
     }
-    $('.buttons-dialogue .cancel').click(function() {
+    $('.buttons-dialogue .cancel').click(function () {
         closeSaveBox();
-        editor[$('.active').index()].focus();
+        focusEditor();
     });
-    $('.buttons-dialogue .no').click(function() {
+    $('.buttons-dialogue .no').click(function () {
         closeTab(closedTab);
         closeSaveBox();
     });
     var yesClicked;
-    $('.buttons-dialogue .yes').click(function() {
+    $('.buttons-dialogue .yes').click(function () {
         yesClicked = true;
         $('.save').click();
         closeSaveBox();
@@ -676,7 +706,7 @@ $(document).ready(function() {
         resizeTabs();
         closeSaveBox();
     }
-    $(document).on('click', '.close', function(e) {
+    $(document).on('click', '.close', function (e) {
         e.stopImmediatePropagation();
         e.stopPropagation();
         if ($(this).text() == 'fiber_manual_record') {
@@ -685,18 +715,18 @@ $(document).ready(function() {
             closeTab($(this));
         }
     });
-    $(document).on('change', '.title', function(e) {
+    $(document).on('change', '.title', function (e) {
         changeMode();
     });
-    $(document).on('keyup', '.title', function(e) {
+    $(document).on('keyup', '.title', function (e) {
         if (e.keyCode == 13) {
             if ($(this).val() === '') {
                 $(this).val('untitled.txt');
             }
-            editor[$('.active').index()].focus();
+            focusEditor();
         }
     });
-    $(document).on('keydown', '.title', function(e) {
+    $(document).on('keydown', '.title', function (e) {
         if (e.keyCode == 65 && e.ctrlKey) {
             e.target.select();
         }
@@ -723,7 +753,7 @@ $(document).ready(function() {
             bottom: '0px'
         }, 200);
         refreshEditors();
-        setTimeout(function() {
+        setTimeout(function () {
             $('.search-bar').focus();
         }, 200);
     }
@@ -733,15 +763,15 @@ $(document).ready(function() {
         $('.search-container').show().stop().animate({
             opacity: '0',
             bottom: '-100px'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
             cm = editor[$('.active').index()];
             clearSearch(cm);
-            editor[$('.active').index()].focus();
+            focusEditor();
         });
     }
     var found, timer;
-    $('.search-bar').on('keyup focus', function() {
+    $('.search-bar').on('keyup focus', function () {
         text = $('.search-bar').val();
         cm = editor[$('.active').index()];
         state = getSearchState(cm);
@@ -752,9 +782,9 @@ $(document).ready(function() {
             cm.scrollIntoView({
                 from: cursor.from(),
                 to: cursor.to()
-            }, 100, function() {
+            }, 100, function () {
                 clearTimeout(timer);
-                timer = setTimeout(function() {
+                timer = setTimeout(function () {
                     if ($('.cm-searching').length === 0 && text !== '') {
                         $('.search-bar').css('box-shadow', 'inset 0px -1px 0px 0px rgba(239, 37, 37, 0.58)');
                     } else {
@@ -768,32 +798,32 @@ $(document).ready(function() {
             found = 0;
         }
     });
-    $('.find_next').click(function() {
+    $('.find_next').click(function () {
         text = $('.search-bar').val();
         cm = editor[$('.active').index()];
         state = getSearchState(cm);
         startSearch(cm, state, text);
         doSearch(cm, false);
     });
-    $('.find_prev').click(function() {
+    $('.find_prev').click(function () {
         text = $('.search-bar').val();
         cm = editor[$('.active').index()];
         state = getSearchState(cm);
         startSearch(cm, state, text);
         doSearch(cm, true);
     });
-    $('.replace_all').click(function() {
+    $('.replace_all').click(function () {
         text = $('.search-bar').val();
         query = $('.search-replace').val();
         cm = editor[$('.active').index()];
         replaceAll(cm, text, query);
     });
-    $('.replace').click(function() {
+    $('.replace').click(function () {
         query = $('.search-bar').val();
         text = $('.search-replace').val();
         cm = editor[$('.active').index()];
         var cursor = getSearchCursor(cm, query, cm.getCursor("from"));
-        var advance = function() {
+        var advance = function () {
             var start = cursor.from(),
                 match;
             if (!(match = cursor.findNext())) {
@@ -806,9 +836,9 @@ $(document).ready(function() {
                 from: cursor.from(),
                 to: cursor.to()
             });
-            var doReplace = function(match) {
+            var doReplace = function (match) {
                 cursor.replace(typeof query == "string" ? text :
-                    text.replace(/\$(\d)/g, function(_, i) {
+                    text.replace(/\$(\d)/g, function (_, i) {
                         return match[i];
                     }));
             };
@@ -816,7 +846,7 @@ $(document).ready(function() {
         };
         advance();
     });
-    $(document).bind('keydown', function(e) {
+    $(document).bind('keydown', function (e) {
         if (e.ctrlKey && e.keyCode == 83 && !e.shiftKey || e.metaKey && e.keyCode == 83 && !e.shiftKey) {
             $('.save').click();
         }
@@ -865,7 +895,7 @@ $(document).ready(function() {
     function openOverflow() {
         $('.menu').show().stop().animate({
             opacity: '1',
-            height: '360px'
+            height: '420px'
         }, 200);
     }
 
@@ -873,25 +903,25 @@ $(document).ready(function() {
         $('.menu').stop().animate({
             opacity: '0',
             height: '0px'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
     }
-    $('.overflow-menu').click(function() {
+    $('.overflow-menu').click(function () {
         openOverflow();
     });
-    $('.menu-li').click(function() {
+    $('.menu-li').click(function () {
         closeOverflow();
     });
-    $(document).on('click', '.workspace, .tab, .tabs, .sidebar', function() {
+    $(document).on('click', '.workspace, .tab, .tabs, .sidebar', function () {
         closeOverflow();
     });
-    $(document).on('click', '.title', function(e) {
+    $(document).on('click', '.title', function (e) {
         e.stopPropagation();
         closeOverflow();
     });
     //menu functionality
-    $('.new').click(function() {
+    $('.new').click(function () {
         newTab();
         var index = $('.active').index();
         editor[index] = CodeMirror.fromTextArea(document.getElementById('textarea' + Number($('.tabs').children().last().attr('id').replace('tab', ''))), config);
@@ -906,7 +936,7 @@ $(document).ready(function() {
             };
         }
         loadSettings(prefs);
-        setTimeout(function() {
+        setTimeout(function () {
             editor[index].focus();
             autoSave(index);
         }, 1);
@@ -917,18 +947,19 @@ $(document).ready(function() {
     }
 
     function openFiles(fileEntries, fromDir) {
-        fileEntries.forEach(function(fileEntry) {
-            fileEntry.file(function(file) {
+        fileEntries.forEach(function (fileEntry) {
+            fileEntry.file(function (file) {
                 var reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     var text = e.target.result;
                     newTab();
                     setFileName(fileEntry.name);
+                    var path = cleanPath(fileEntry);
                     if (fromDir === false) {
                         createDataAttr(fileEntry.name);
                     } else {
                         createDataAttr(fileEntry.name + 'isOpen');
-                        createPathAttr(fileEntry.fullPath);
+                        createPathAttr(path);
                     }
                     var newIndex = $('.active').attr('id').replace('tab', '');
                     var index = Number(newIndex);
@@ -956,10 +987,10 @@ $(document).ready(function() {
             });
         });
     }
-    $('.open').click(function() {
+    $('.open').click(function () {
         chrome.fileSystem.chooseEntry({
             acceptsMultiple: true
-        }, function(fileEntries) {
+        }, function (fileEntries) {
             if (!fileEntries) {
                 console.log('No Files Selected');
             }
@@ -969,8 +1000,8 @@ $(document).ready(function() {
 
     $('.sidebar').resizable({
         handles: 'e',
-        maxWidth: 400,
-        "resize": function(event, ui) {
+        maxWidth: 600,
+        "resize": function (event, ui) {
             var width = ui.size.width;
             $('.tabs').width($(window).width() - 70 - width);
             $('.workspace').width($(window).width() - width);
@@ -993,24 +1024,24 @@ $(document).ready(function() {
         $('.new-project-dialogue').stop().animate({
             top: '60%',
             opacity: '0'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
         $('.bg').stop().animate({
             opacity: '0'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
     }
-    $('.add-newproject').click(function() {
+    $('.add-newproject').click(function () {
         openProjectDialog();
         $('.new-project-dialogue input').css('box-shadow', '0px 1px 0px 0px #47bfa1');
         $('.new-project-dialogue input').val('');
         $('.new-project-dialogue input').focus();
     });
-    $('.new-project-cancel').click(function() {
+    $('.new-project-cancel').click(function () {
         closeProjectDialog();
-        editor[$('.active').index()].focus();
+        focusEditor();
     });
 
     var projectDir;
@@ -1024,14 +1055,14 @@ $(document).ready(function() {
             projectDir = dirEntry;
         }
     }
-    $('.projects').scroll(function() {
+    $('.projects').scroll(function () {
         contextMenuOff();
         folderContextOff();
     });
-    $('.chooseDir').click(function() {
+    $('.chooseDir').click(function () {
         chrome.fileSystem.chooseEntry({
             type: 'openDirectory'
-        }, function(dirEntry) {
+        }, function (dirEntry) {
             if (!dirEntry) {
                 var state = 'No Directory Chosen'
                 setChosenDirInd(state);
@@ -1041,7 +1072,7 @@ $(document).ready(function() {
             }
         });
     });
-    $('.new-project-create').click(function() {
+    $('.new-project-create').click(function () {
         var projectName = $(this).parent().parent().find('input').val();
         if (projectName === '') {
             projectName = 'untitled';
@@ -1050,38 +1081,49 @@ $(document).ready(function() {
         projectDir.getDirectory(projectName, {
             create: true,
             exclusive: true
-        }, function(dirEntry) {
-            rootDirs.push(chrome.fileSystem.retainEntry(dirEntry));
-            directories.push({
-                entry: dirEntry
+        }, function (dirEntry) {
+            dirEntry.getFile('temp.txt', {
+                create: true,
+                exclusive: true
+            }, function (entry) {
+                entry.getParent(function (parent) {
+                    rootDirs.push(chrome.fileSystem.retainEntry(parent));
+                    directories.push({
+                        entry: parent
+                    });
+                    var path = cleanPath(parent);
+                    var div = document.createElement('div');
+                    var thisName = parent.name;
+                    thisName = replaceName(thisName);
+                    div.className = thisName + ' folder';
+                    div.setAttribute('path', path);
+                    div.innerHTML = '<div class="material-icons">book</div>' + parent.name + '<ul class="' + thisName + 'ul"></ul>';
+                    $('.projects').append(div);
+                    $('.projects').children().last().children().last().hide();
+                    closeProjectDialog();
+                    focusEditor();
+                    entry.remove(function () {
+                        console.log('success!');
+                    });
+                });
             });
-            var div = document.createElement('div');
-            var thisName = dirEntry.name;
-            thisName = replaceName(thisName);
-            div.className = thisName + ' folder';
-            div.setAttribute('path', dirEntry.fullPath);
-            div.innerHTML = '<div class="material-icons">book</div>' + dirEntry.name + '<ul class="' + thisName + 'ul"></ul>';
-            $('.projects').append(div);
-            $('.projects').children().last().children().last().hide();
-            closeProjectDialog();
-            editor[$('.active').index()].focus();
         });
     });
-    $(document).on('keyup', '.dialog-input:not(.rename-file-input, .rename-folder-input)', function(e) {
+    $(document).on('keyup', '.dialog-input:not(.rename-file-input, .rename-folder-input)', function (e) {
         var folderName = $(this).val();
         if (folderName === '') {
             folderName = 'untitled';
         }
         var folderNames = [];
         if ($(this).hasClass('new-project-input')) {
-            $('.projects').children().each(function(index) {
+            $('.projects').children().each(function (index) {
                 folderNames.push($(this).clone().children().remove().end().text());
             });
             if (e.keyCode == 13) {
                 $('.new-project-create').click();
             }
         } else {
-            folderToRemove.children().last().children().each(function(index) {
+            folderToRemove.children().last().children().each(function (index) {
                 folderNames.push($(this).clone().children().remove().end().text());
             });
         }
@@ -1093,7 +1135,7 @@ $(document).ready(function() {
     });
 
     function sortDirect() {
-        $('.projects div').each(function() {
+        $('.projects div').each(function () {
             if ($(this).hasClass('file')) {
                 $(this).insertAfter($(this).parent().children().last());
             } else {}
@@ -1102,7 +1144,22 @@ $(document).ready(function() {
     docFrag = document.createDocumentFragment();
 
     function replaceName(name) {
-        return name.replace(/\./g, '').replace(/ /g, '_').replace(/["'()]/g, '_');
+        name = btoa(unescape(encodeURIComponent(name)));
+        
+        return name.replace(/\./g, '')
+            .replace(/ /g, '_')
+            .replace(/["'()]/g, '_')
+            .replace(/[^\w\s]/gi, '')
+            .replace(/[\W\s]/gi, '')
+            .replace(/0/g, 'a')
+            .replace(/1/g, 'b')
+            .replace(/2/g, 'c')
+            .replace(/3/g, 'd')
+            .replace(/4/g, 'e')
+            .replace(/5/g, 'f')
+            .replace(/6/g, 'g')
+            .replace(/7/g, 'h')
+            .replace(/9/g, 'i');  
     }
 
     function splitAndReturn(string, token, numb) {
@@ -1125,11 +1182,13 @@ $(document).ready(function() {
     function displayDataDir(x) {
         var thisName = directories[x].entry.name;
         var path = directories[x].entry.fullPath;
-
+        path = cleanPath(directories[x].entry);
+        var newPath = directories[x].entry.fullPath;
+        newPath = cleanPath(directories[x].entry);
         //what the fuck am I doing with my life.
         path = splitAndReturn(path, '/', 0);
         //adjust path for classes
-        path.forEach(function(val, index, array) {
+        path.forEach(function (val, index, array) {
             path[index] = replaceName(val);
         });
 
@@ -1139,53 +1198,51 @@ $(document).ready(function() {
         var div = document.createElement('div');
         var material;
         div.className = thisName + ' folder';
-        div.setAttribute('path', directories[x].entry.fullPath);
-        if (isRoot(directories[x].entry.fullPath)) {
+        div.setAttribute('path', newPath);
+        if (isRoot(newPath)) {
             material = '<div class="material-icons">book</div>';
         } else {
             material = '<div class="material-icons">folder</div>';
         }
         div.innerHTML = material + directories[x].entry.name + '<ul style="display:none;" class="' + thisName + 'ul"></ul>';
         path.shift();
-        path.forEach(function(value, index, array) {
-            path[index] = value + ' .' + value + 'ul';
+        path.forEach(function (value, index, array) {
+            path[index] = value + ' > .' + value + 'ul' + '/';
         });
-        path = '.' + path.join(' .');
-        if (docFrag.querySelector(path) === null) {
-            path = path.split(' ');
-            path.forEach(function(value, index, array) {
-                if (value === '') {
+        path = '.' + path.join(' > .');
+        path = path.split('/');
+        path.pop();
+        path.forEach(function(value, index, array){
+            if(array.length == 1){
+                docFrag.appendChild(div);
+            }else{
+                if(index === 0){
 
-                } else {
-                    var newPath = array.slice();
-                    newPath.splice(index + 1, array.length - (index + 1));
-                    newPath = newPath.join(' ');
-                    if (docFrag.querySelector(newPath) !== null) {
-                        //do nothing
-                    } else {
-                        var temp = array;
-                        if (index === 0) {
-                            docFrag.appendChild(div);
-                        } else {
-                            var remaining = temp.length - index;
-                            temp.splice(index, remaining);
-                            temp = temp.join(' ');
-                            docFrag.querySelector(temp).appendChild(div);
-                        }
-                    }
-                }
-            });
-        }
+                }else{
+                    var newPath = array.slice(0);
+                    var remaining = newPath.length - index;
+                        newPath.splice(index, remaining);
+                        newPath = newPath.join(' ');
+                        if(docFrag.querySelector(newPath) === null){
+                        }else{
+                            docFrag.querySelector(newPath).appendChild(div); 
+                        } 
+                } 
+            }
+            
+        });
     }
 
     function displayDataFile(y) {
         var name = files[y].entry.name;
         var path = files[y].entry.fullPath;
-
+        path = cleanPath(files[y].entry);
+        var newpath = files[y].entry.fullPath;
+        newpath = cleanPath(files[y].entry);
         path = splitAndReturn(path, '/', 0);
         //adjust path for classes
-        path.forEach(function(val, index, array) {
-            path[index] = val.replace(/ /g, '_').replace(/\./g, '').replace(/["'()]/g, '_');
+        path.forEach(function (val, index, array) {
+            path[index] = replaceName(val);
         });
 
         //adjust for classes
@@ -1195,34 +1252,19 @@ $(document).ready(function() {
         var div = document.createElement('div');
         var material = getMaterial(files[y].entry.name, true);
         div.className = name + ' file';
-        div.setAttribute('path', files[y].entry.fullPath);
+        div.setAttribute('path', newpath);
         div.innerHTML = material + files[y].entry.name;
         path.shift();
-        path.forEach(function(value, index, array) {
+        path.forEach(function (value, index, array) {
             if (index === array.length - 1) {
                 path[index] = value;
             } else {
-                path[index] = value + ' .' + value + 'ul';
+                path[index] = value + ' > .' + value + 'ul';
             }
         });
-        path = '.' + path.join(' .');
-        if (docFrag.querySelector(path) === null) {
-            path = path.split(' ');
-            path.forEach(function(value, index, array) {
-                var newPath = array.slice();
-                newPath.splice(index + 1, array.length - (index + 1));
-                newPath = newPath.join(' ');
-                if (docFrag.querySelector(newPath) !== null) {
-
-                } else {
-                    var temp = array;
-                    var remaining = temp.length - index;
-                    temp.splice(index, remaining);
-                    temp = temp.join(' ');
-                    docFrag.querySelector(temp).appendChild(div);
-                }
-            });
-        }
+        path.pop();
+        path = '.' + path.join(' > .');
+        docFrag.querySelector(path).appendChild(div);
     }
 
     function showPreLoad(text, callback, entry) {
@@ -1242,15 +1284,15 @@ $(document).ready(function() {
         $('.preload').stop().animate({
             opacity: '0',
             top: '100%'
-        }, 600, function() {
+        }, 600, function () {
             $(this).hide();
         });
     }
 
     function loadDirEntry(dirEntry) {
         var dirReader = dirEntry.createReader();
-        var readEntries = function() {
-            dirReader.readEntries(function(results) {
+        var readEntries = function () {
+            dirReader.readEntries(function (results) {
                 for (var gg = 0; gg < results.length; gg++) {
                     var data = results[gg];
                     if (data.isDirectory) {
@@ -1259,7 +1301,6 @@ $(document).ready(function() {
                         });
                         displayDataDir(directories.length - 1);
                         loadDirEntry(data);
-
                     } else {
                         files.push({
                             entry: data
@@ -1274,27 +1315,41 @@ $(document).ready(function() {
 
     function afterPreLoad(dirEntry) {
         docFrag.innerHTML = '';
-        reloadDirEntries(dirEntry);
-        setTimeout(function() {
-            $('.projects').append(docFrag.children);
-            sortDirect();
-            hidePreLoad();
-        }, 1000);
+        dirEntry.getMetadata(function(metadata){
+            var size = metadata.size,
+                time = Math.ceil(size);
+            if(Number.isFinite(time) == false){
+                time = 1000;
+            }
+            if(time > 20000){
+                time = 20000;
+            }
+            if(time < 5000){
+                time = 2500;
+            }
+            reloadDirEntries(dirEntry);
+            setTimeout(function () {
+                $('.projects').append(docFrag.children);
+                sortDirect();
+                hidePreLoad();
+            }, time);
+        });
     }
-    $('.open-dir').click(function() {
+    $('.open-dir').click(function () {
         chrome.fileSystem.chooseEntry({
             type: 'openDirectory'
-        }, function(dirEntry) {
+        }, function (dirEntry) {
             if (!dirEntry) {
                 console.log('No Directory Selected');
             } else {
                 var isInRoot;
                 if (rootDirs.length === 0) {
+                    docFrag.innerHTML = '';
                     rootDirs.push(chrome.fileSystem.retainEntry(dirEntry));
                     showPreLoad(dirEntry.name, afterPreLoad, dirEntry);
                 } else {
                     for (var i = 0; i < rootDirs.length; i++) {
-                        chrome.fileSystem.restoreEntry(rootDirs[i], function(entry) {
+                        chrome.fileSystem.restoreEntry(rootDirs[i], function (entry) {
                             if (entry.fullPath == dirEntry.fullPath) {
                                 isInRoot = true;
                             }
@@ -1306,12 +1361,25 @@ $(document).ready(function() {
                                 rootDirs.push(chrome.fileSystem.retainEntry(dirEntry));
                                 showPreLoad(dirEntry.name);
                                 docFrag.innerHTML = '';
+                                dirEntry.getMetadata(function(metadata){
+                                var size = metadata.size,
+                                    time = Math.ceil(size);
+                                if(Number.isFinite(time) == false){
+                                    time = 1000;
+                                }
+                                if(time > 20000){
+                                    time = 20000;
+                                }
+                                if(time < 5000){
+                                    time = 2500;
+                                }
                                 reloadDirEntries(dirEntry);
-                                setTimeout(function() {
+                                setTimeout(function () {
                                     $('.projects').append(docFrag.children);
                                     sortDirect();
                                     hidePreLoad();
-                                }, 1000);
+                                }, time);
+                            });
                             }
                         }
                     }
@@ -1319,10 +1387,10 @@ $(document).ready(function() {
             }
         });
     });
-    $(document).on('click', '.projects .folder', function(e) {
+    $(document).on('click', '.projects .folder', function (e) {
         e.stopPropagation();
         if ($(this).children('ul').is(':visible')) {
-            $(this).children('ul').hide();
+            $(this).children('ul').velocity('slideUp', { duration : 200, complete: function(){ $(this).hide() } });
             if ($(this).children().closest('.material-icons').text() == 'book') {
                 $(this).children().closest('.material-icons').text('book');
             } else if ($(this).children().closest('.material-icons').text() == 'folder_open') {
@@ -1330,7 +1398,7 @@ $(document).ready(function() {
             }
             $(this).css('color', 'rgba(255,255,255,0.8)');
         } else {
-            $(this).children('ul').show();
+            $(this).children('ul').show().velocity('slideDown', { duration : 200 });
             if ($(this).children().closest('.material-icons').text() == 'book') {
                 $(this).children().closest('.material-icons').text('book');
             } else if ($(this).children().closest('.material-icons').text() == 'folder') {
@@ -1341,12 +1409,12 @@ $(document).ready(function() {
 
         folderToRemove = $(this);
     });
-    $(document).on('click', '.projects ul', function(e) {
+    $(document).on('click', '.projects ul', function (e) {
         e.stopPropagation();
         e.stopImmediatePropagation();
     });
     var projectFileEntry;
-    $(document).on('click', '.projects .file', function(e) {
+    $(document).on('click', '.projects .file', function (e) {
         e.preventDefault();
         e.stopImmediatePropagation();
         e.stopPropagation();
@@ -1357,8 +1425,9 @@ $(document).ready(function() {
             var thisName = $(this).clone().children().remove().end().text();
             var thisPath = $(this).attr('path');
 
-            var getMatchingEntry = function(obj) {
-                if (obj.entry.name == thisName && obj.entry.fullPath == thisPath) {
+            var getMatchingEntry = function (obj) {
+                var path = cleanPath(obj.entry);
+                if (obj.entry.name == thisName && path == thisPath) {
                     return obj;
                 }
             };
@@ -1394,7 +1463,7 @@ $(document).ready(function() {
     function contextMenuOff() {
         $('.contextmenu').stop().animate({
             opacity: '0'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
     }
@@ -1418,7 +1487,7 @@ $(document).ready(function() {
     function folderContextOff() {
         $('.folder-contextmenu').stop().animate({
             opacity: '0'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
     }
@@ -1446,12 +1515,12 @@ $(document).ready(function() {
         $('.remove-dialogue').stop().animate({
             top: '60%',
             opacity: '0'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
         $('.bg').stop().animate({
             opacity: '0'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
     }
@@ -1471,12 +1540,12 @@ $(document).ready(function() {
         $('.folder-remove-dialogue').stop().animate({
             top: '60%',
             opacity: '0'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
         $('.bg').stop().animate({
             opacity: '0'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
     }
@@ -1495,12 +1564,12 @@ $(document).ready(function() {
         $('.new-file-dialogue').stop().animate({
             top: '60%',
             opacity: '0'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
         $('.bg').stop().animate({
             opacity: '0'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
     }
@@ -1519,12 +1588,12 @@ $(document).ready(function() {
         $('.new-folder-dialogue').stop().animate({
             top: '60%',
             opacity: '0'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
         $('.bg').stop().animate({
             opacity: '0'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
     }
@@ -1543,12 +1612,12 @@ $(document).ready(function() {
         $('.rename-file-dialogue').stop().animate({
             top: '60%',
             opacity: '0'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
         $('.bg').stop().animate({
             opacity: '0'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
     }
@@ -1567,12 +1636,12 @@ $(document).ready(function() {
         $('.rename-folder-dialogue').stop().animate({
             top: '60%',
             opacity: '0'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
         $('.bg').stop().animate({
             opacity: '0'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
     }
@@ -1588,9 +1657,12 @@ $(document).ready(function() {
     }
 
     function getMaterial(name, html) {
-        var images = ['.png', '.jpg', '.jpeg', '.tiff', '.giff', '.exiff'];
+        var videos = ['.mp4', '.flv', '.wmv', '.avi', '.3gp', '.m4v', '.vob', '.webm', '.qtff', '.avchd', '.mov', '.qt', '.swf', '.mkv'];
+        var images = ['.png', '.jpg', '.jpeg', '.tiff', '.gif', '.exiff'];
         var sound = ['.wav', '.mp3', '.aiff', '.wma', '.m3u', '.au'];
         var fonts = ['.woff', '.ttf', '.woff2', '.eot', '.otf', '.svg'];
+        var code = ['.asp','.aspx','.axd','.asx','.asmx','.ashx','.css','.cfm','.yaws','.swf','.jsp','.jspx','.wss','.do','.action','.js','.json','.pl','.php','.php4','.php3','.phtml','.py','.rb','.rhtml','.shtml','.xml','.rss','.svg','.cgi','.dll'];
+        var other = ['.md','.html','.htm','.xhtml','.jhtml'];
         var material;
 
         var extension = splitAndReturn(name, '.', 1);
@@ -1603,7 +1675,13 @@ $(document).ready(function() {
                 material = '<div class="material-icons">volume_up</div>';
             } else if (fonts.indexOf(extension) > -1) {
                 material = '<div class="material-icons">text_format</div>';
-            } else {
+            } else if(videos.indexOf(extension) > -1){
+                material = '<div class="material-icons">movie</div>';
+            } else if(code.indexOf(extension) > -1){
+                material = '<div class="material-icons">code</div>';
+            } else if(other.indexOf(extension) > -1){
+                material = '<div class="material-icons">description</div>';
+            }else {
                 material = '<div class="material-icons">insert_drive_file</div>';
             }
         } else {
@@ -1613,6 +1691,12 @@ $(document).ready(function() {
                 material = 'volume_up';
             } else if (fonts.indexOf(extension) > -1) {
                 material = 'text_format';
+            } else if(videos.indexOf(extension) > -1){
+                material = 'movie';
+            } else if(code.indexOf(extension) > -1){
+                material = 'code';
+            } else if(other.indexOf(extension) > -1){
+                material = 'description';
             } else {
                 material = 'insert_drive_file';
             }
@@ -1620,7 +1704,7 @@ $(document).ready(function() {
 
         return material;
     }
-    $(document).on('contextmenu', '.projects .file', function(e) {
+    $(document).on('contextmenu', '.projects .file', function (e) {
         e.stopPropagation();
         e.preventDefault();
         removeTitle = $(this).clone().children().remove().end().text();
@@ -1629,21 +1713,21 @@ $(document).ready(function() {
         fileToRemove = $(this);
         contextMenuOn(e);
     });
-    $('.folder-contextmenu .folder-rename').click(function() {
+    $('.folder-contextmenu .folder-rename').click(function () {
         openRenameFolderDialog();
         contextMenuOff();
         resetInput('.rename-folder-input', folderContextMenuName);
     });
-    $('.rename-folder-cancel').click(function() {
+    $('.rename-folder-cancel').click(function () {
         closeRenameFolderDialog();
-        editor[$('.active').index()].focus();
+        focusEditor();
     });
 
     function removeChildDirectories(directory) {
-        var directoryFolders = jQuery.grep(directories, function(elem) {
+        var directoryFolders = jQuery.grep(directories, function (elem) {
             return (elem.entry.fullPath.indexOf(directory.fullPath) > -1);
         });
-        var directoryFiles = jQuery.grep(files, function(elem) {
+        var directoryFiles = jQuery.grep(files, function (elem) {
             return (elem.entry.fullPath.indexOf(directory.fullPath) > -1);
         });
         if (directoryFolders.length !== 0) {
@@ -1660,8 +1744,8 @@ $(document).ready(function() {
 
     function reloadLoadedEntries(directory) {
         var dirReader = directory.createReader();
-        var readEntries = function() {
-            dirReader.readEntries(function(results) {
+        var readEntries = function () {
+            dirReader.readEntries(function (results) {
                 for (var i = 0; i < results.length; i++) {
                     var data = results[i];
                     if (data.isDirectory) {
@@ -1681,7 +1765,7 @@ $(document).ready(function() {
     }
 
     function assignEntries(folder, oldName, newName) {
-        $(folder + ' div:not(.material-icons)').each(function(index) {
+        $(folder + ' div:not(.material-icons)').each(function (index) {
             var path = $(this).attr('path');
             $(this).attr('path', path.replace(oldName, newName));
             if ($(this).hasClass('file')) {
@@ -1692,13 +1776,13 @@ $(document).ready(function() {
             }
         });
     }
-    $('.rename-folder-create').click(function() {
+    $('.rename-folder-create').click(function () {
         var newFolderName = $('.rename-folder-input').val();
         if (newFolderName == '') {
             newFolderName = folderContextMenuName;
         }
         var folderNames = [];
-        folderToRemove.parent().children().each(function(index) {
+        folderToRemove.parent().children().each(function (index) {
             var text = $(this).clone().children().remove().end().text();
             if (text == folderContextMenuName) {
 
@@ -1711,55 +1795,59 @@ $(document).ready(function() {
             $('.rename-folder-input').focus();
         } else {
             function getMatchingEntry(obj) {
-                if (obj.entry.name == folderContextMenuName && obj.entry.fullPath == folderContextMenuPath) {
+                var path = cleanPath(obj.entry);
+                if (obj.entry.name == folderContextMenuName && path == folderContextMenuPath) {
                     return obj;
                 }
             }
 
             function getIndex(element) {
-                return (element.entry.name == folderContextMenuName && element.entry.fullPath == folderContextMenuPath);
+                var path = cleanPath(element.entry);
+                return (element.entry.name == folderContextMenuName && path == folderContextMenuPath);
             }
             var directory = directories.find(getMatchingEntry);
             directory = directory.entry;
             var directoryIndex = directories.findIndex(getIndex);
-            directory.getParent(function(parentEntry) {
-                directory.moveTo(parentEntry, newFolderName, function(newFolderEntry) {
+            directory.getParent(function (parentEntry) {
+                directory.moveTo(parentEntry, newFolderName, function (newFolderEntry) {
                     var nameForClass = newFolderEntry.name;
                     nameForClass = replaceName(nameForClass);
                     directories[directoryIndex] = {
                         entry: newFolderEntry
                     }
+                    var path = cleanPath(newFolderEntry);
                     folderToRemove.attr('class', nameForClass + ' folder');
-                    folderToRemove.attr('path', newFolderEntry.fullPath);
+                    folderToRemove.attr('path', path);
                     folderToRemove.children().last().attr('class', nameForClass + 'ul');
                     folderToRemove.get(0).childNodes[1].nodeValue = newFolderName;
                     removeChildDirectories(directory);
                     reloadLoadedEntries(newFolderEntry);
                     assignEntries('.' + nameForClass + 'ul', directory.name, newFolderEntry.name);
                     closeRenameFolderDialog();
-                    editor[$('.active').index()].focus();
+                    focusEditor();
                 });
             });
         }
     });
-    $('.contextmenu .rename').click(function() {
+    $('.contextmenu .rename').click(function () {
         openRenameFileDialog();
         contextMenuOff();
         resetInput('.rename-file-input', contextMenuName);
     });
 
     function rename(cwd, src, newName, oldFileEntry, fileToRemove, isTab) {
-        cwd.getFile(src, {}, function(fileEntry) {
-            fileEntry.moveTo(cwd, newName, function(newFileEntry) {
+        cwd.getFile(src, {}, function (fileEntry) {
+            fileEntry.moveTo(cwd, newName, function (newFileEntry) {
                 var nameForClass = replaceName(newFileEntry.name);
                 var material = getMaterial(newFileEntry.name, false);
+                var path = cleanPath(newFileEntry);
                 fileToRemove.attr('class', nameForClass + ' file');
-                fileToRemove.attr('path', newFileEntry.fullPath);
+                fileToRemove.attr('path', path);
                 fileToRemove.find('.material-icons').first().text(material);
                 fileToRemove.get(0).childNodes[1].nodeValue = newFileEntry.name;
                 oldFileEntry.entry = newFileEntry;
                 if (isTab) {
-                    changeTab(editIndex, newName, newFileEntry.fullPath);
+                    changeTab(editIndex, newName, path);
                     fileDirs[editIndex] = newFileEntry;
                     changeMode();
                 }
@@ -1772,7 +1860,7 @@ $(document).ready(function() {
         $('.tab').eq(index).attr('path', path);
         $('.tab').eq(index).attr('data', name + 'isOpen');
     }
-    $('.rename-file-create').click(function() {
+    $('.rename-file-create').click(function () {
         var newName = $(this).parent().parent().find('input').val();
 
         function getMatchingEntry(obj) {
@@ -1785,7 +1873,7 @@ $(document).ready(function() {
             newName = oldName;
         }
         var fileNames = [];
-        fileToRemove.parent().children().each(function(index) {
+        fileToRemove.parent().children().each(function (index) {
             var text = $(this).clone().children().remove().end().text();
             if (text == oldName) {
 
@@ -1803,7 +1891,8 @@ $(document).ready(function() {
             parentPath = parentPath.join('/');
 
             function getMatchingDirEntry(obj) {
-                if (obj.entry.name == parentName && obj.entry.fullPath == parentPath) {
+                var path = cleanPath(obj.entry);
+                if (obj.entry.name == parentName && path == parentPath) {
                     return obj;
                 }
             }
@@ -1816,18 +1905,18 @@ $(document).ready(function() {
                 rename(projectDirEntry, projectFileEntry.entry.name, newName, projectFileEntry, fileToRemove, false);
             }
             closeRenameFileDialog();
-            editor[$('.active').index()].focus();
+            focusEditor();
         }
     });
-    $('.rename-file-cancel').click(function() {
+    $('.rename-file-cancel').click(function () {
         closeRenameFileDialog();
-        editor[$('.active').index()].focus();
+        focusEditor();
     });
-    $('.contextmenu .remove').click(function() {
+    $('.contextmenu .remove').click(function () {
         openRemoveDialog();
         contextMenuOff();
     });
-    $(document).on('contextmenu', '.projects .folder', function(e) {
+    $(document).on('contextmenu', '.projects .folder', function (e) {
         e.stopPropagation();
         e.preventDefault();
         folderRemoveTitle = $(this).clone().children().remove().end().text();
@@ -1838,7 +1927,7 @@ $(document).ready(function() {
 
         var projectChildren = $('.projects').children();
         var path = [];
-        projectChildren.each(function() {
+        projectChildren.each(function () {
             path.push($(this).attr('path'))
         });
         if (path.indexOf(folderContextMenuPath) > -1) {
@@ -1850,24 +1939,25 @@ $(document).ready(function() {
             $('.folder-contextmenu .folder-removefromproject').hide();
         }
     });
-    $(document).on('keyup', '.new-folder-dialogue input', function(e) {
+    $(document).on('keyup', '.new-folder-dialogue input', function (e) {
         e.stopPropagation();
         if (e.keyCode == 13) {
             $('.new-folder-create').click();
         }
     });
-    $(document).on('keyup', '.new-file-dialogue input', function(e) {
+    $(document).on('keyup', '.new-file-dialogue input', function (e) {
         e.stopPropagation();
         if (e.keyCode == 13) {
             $('.new-file-create').click();
         }
     });
-    $(document).on('keyup', '.rename-file-input', function(e) {
+    $(document).on('keyup', '.rename-file-input', function (e) {
         e.stopPropagation();
         var newName = $(this).val();
 
         function getMatchingEntry(obj) {
-            if (obj.entry.name == contextMenuName && obj.entry.fullPath == contextMenuPath) {
+            var path = cleanPath(obj.entry);
+            if (obj.entry.name == contextMenuName && path == contextMenuPath) {
                 return obj;
             }
         }
@@ -1876,7 +1966,7 @@ $(document).ready(function() {
             newName = oldName;
         }
         var fileNames = [];
-        fileToRemove.parent().children().each(function(index) {
+        fileToRemove.parent().children().each(function (index) {
             var text = $(this).clone().children().remove().end().text();
             if (text == oldName) {
 
@@ -1894,12 +1984,13 @@ $(document).ready(function() {
             $('.rename-file-create').click();
         }
     });
-    $(document).on('keyup', '.rename-folder-input', function(e) {
+    $(document).on('keyup', '.rename-folder-input', function (e) {
         e.stopPropagation();
         var newName = $(this).val();
 
         function getMatchingEntry(obj) {
-            if (obj.entry.name == folderContextMenuName && obj.entry.fullPath == folderContextMenuPath) {
+            var path = cleanPath(obj.entry);
+            if (obj.entry.name == folderContextMenuName && path == folderContextMenuPath) {
                 return obj;
             }
         }
@@ -1908,7 +1999,7 @@ $(document).ready(function() {
             newName = oldName;
         }
         var folderNames = [];
-        folderToRemove.parent().children().each(function(index) {
+        folderToRemove.parent().children().each(function (index) {
             var text = $(this).clone().children().remove().end().text();
             if (text == oldName) {
 
@@ -1926,17 +2017,19 @@ $(document).ready(function() {
             $('.rename-folder-create').click();
         }
     });
-    $('.folder-contextmenu .folder-removefromproject').click(function() {
-        var getMatchingDirEntry = function(obj) {
-            if (obj.entry.name == folderContextMenuName && obj.entry.fullPath == folderContextMenuPath) {
+    $('.folder-contextmenu .folder-removefromproject').click(function () {
+        var getMatchingDirEntry = function (obj) {
+            var path = cleanPath(obj.entry);
+            if (obj.entry.name == folderContextMenuName && path == folderContextMenuPath) {
                 return obj;
             }
         }
         var dirEntry = directories.find(getMatchingDirEntry);
-        dirEntry = dirEntry.entry;
+            dirEntry = dirEntry.entry;
+            removeChildDirectories(dirEntry);
         var isTrue;
         for (var i = 0; i < rootDirs.length; i++) {
-            chrome.fileSystem.restoreEntry(rootDirs[i], function(entry) {
+            chrome.fileSystem.restoreEntry(rootDirs[i], function (entry) {
                 if (entry.fullPath == dirEntry.fullPath) {
                     rootDirs.splice(i, 1);
                     isTrue = true;
@@ -1946,33 +2039,34 @@ $(document).ready(function() {
         if (isTrue) {
             folderToRemove.velocity('slideUp', {
                 duration: 200,
-                complete: function() {
+                complete: function () {
                     $(this).remove();
                 }
             });
-            editor[$('.active').index()].focus();
+            focusEditor();
         }
     });
-    $('.folder-contextmenu .folder-addfolder').click(function() {
+    $('.folder-contextmenu .folder-addfolder').click(function () {
         openNewFolderDialog();
         folderContextOff();
         resetInput('.new-folder-input', '');
     });
-    $('.new-folder-create').click(function() {
+    $('.new-folder-create').click(function () {
         var folderName = $(this).parent().parent().find('input').val();
         if (folderName === '') {
             folderName = 'untitled';
         }
         var folderNames = [];
-        folderToRemove.children().last().children().each(function(index) {
+        folderToRemove.children().last().children().each(function (index) {
             folderNames.push($(this).clone().children().remove().end().text());
         });
         if (folderNames.indexOf(folderName) > -1) {
             $('.new-folder-input').css('box-shadow', '0px 1px 0px 0px #d61f1f ');
             $('.new-folder-input').focus();
         } else {
-            var getMatchingDirEntry = function(obj) {
-                if (obj.entry.name == folderContextMenuName && obj.entry.fullPath == folderContextMenuPath) {
+            var getMatchingDirEntry = function (obj) {
+                var path = cleanPath(obj.entry);
+                if (obj.entry.name == folderContextMenuName && path == folderContextMenuPath) {
                     return obj;
                 }
             };
@@ -1981,15 +2075,16 @@ $(document).ready(function() {
             dirEntry.getDirectory(folderName, {
                 create: true,
                 exclusive: true
-            }, function(dirEntry) {
+            }, function (dirEntry) {
                 directories.push({
                     entry: dirEntry
                 });
                 var thisName = dirEntry.name;
                 thisName = replaceName(thisName);
                 var div = document.createElement('div');
+                var path = cleanPath(dirEntry);
                 div.className = thisName + ' folder';
-                div.setAttribute('path', dirEntry.fullPath);
+                div.setAttribute('path', path);
                 div.innerHTML = '<div class="material-icons">folder</div>' + dirEntry.name + '<ul class="' + thisName + 'ul"></ul>';
                 folderToRemove.children().last().append(div);
                 folderToRemove.children().last().children().last().children().last().hide();
@@ -1998,68 +2093,70 @@ $(document).ready(function() {
             });
         }
     });
-    $('.new-folder-cancel').click(function() {
+    $('.new-folder-cancel').click(function () {
         closeNewFolderDialog();
-        editor[$('.active').index()].focus();
+        focusEditor();
     });
-    $('.folder-contextmenu .folder-remove').click(function() {
+    $('.folder-contextmenu .folder-remove').click(function () {
         openFolderRemoveDialog();
         folderContextOff();
     });
-    $('.folder-remove-yes').click(function() {
+    $('.folder-remove-yes').click(function () {
         function getMatchingDirEntry(obj) {
-            if (obj.entry.name == folderContextMenuName && obj.entry.fullPath == folderContextMenuPath) {
+            var path = cleanPath(obj.entry);
+            if (obj.entry.name == folderContextMenuName && path == folderContextMenuPath) {
                 return obj;
             }
         }
         var entryToRemove = directories.find(getMatchingDirEntry);
         entryToRemove = entryToRemove.entry;
         for (var i = 0; i < rootDirs.length; i++) {
-            chrome.fileSystem.restoreEntry(rootDirs[i], function(entry) {
+            chrome.fileSystem.restoreEntry(rootDirs[i], function (entry) {
                 if (entryToRemove.fullPath == entry.fullPath) {
                     rootDirs.splice(i, 1); //remove from rootDirs
                 }
             });
         }
-        entryToRemove.removeRecursively(function() {
+        entryToRemove.removeRecursively(function () {
             folderToRemove.velocity('slideUp', {
                 duration: 200,
-                complete: function() {
+                complete: function () {
                     $(this).remove();
                 }
             });
             closeFolderRemoveDialog();
-            editor[$('.active').index()].focus();
+            focusEditor();
         });
     });
-    $('.folder-remove-no').click(function() {
+    $('.folder-remove-no').click(function () {
         closeFolderRemoveDialog();
-        editor[$('.active').index()].focus();
+        focusEditor();
     });
-    $('.folder-addfile').click(function() {
+    $('.folder-addfile').click(function () {
         openNewFileDialog();
         contextMenuOff();
         resetInput('.new-file-input', '');
     });
-    $('.new-file-cancel').click(function() {
+    $('.new-file-cancel').click(function () {
         closeNewFileDialog();
-        editor[$('.active').index()].focus();
+        focusEditor();
     });
-    $('.new-file-create').click(function() {
+    $('.new-file-create').click(function () {
         var fileName = $(this).parent().parent().find('input').val();
         if (fileName === '') {
             fileName = 'untitled.txt';
         }
         var fileNames = [];
-        folderToRemove.children().last().children().each(function(index) {
+        folderToRemove.children().last().children().each(function (index) {
             fileNames.push($(this).clone().children().remove().end().text());
         });
         if (fileNames.indexOf(fileName) > -1) {
             $('.new-file-input').css('box-shadow', '0px 1px 0px 0px #d61f1f');
             $('.new-file-input').focus();
         } else {
-            var getMatchingDirEntry = function(obj) {
-                if (obj.entry.name == folderContextMenuName && obj.entry.fullPath == folderContextMenuPath) {
+            var getMatchingDirEntry = function (obj) {
+                var path = cleanPath(obj.entry);
+                if (obj.entry.name == folderContextMenuName && path == folderContextMenuPath) {
                     return obj;
                 }
             };
@@ -2068,7 +2165,7 @@ $(document).ready(function() {
             dirEntry.getFile(fileName, {
                 create: true,
                 exclusive: true
-            }, function(fileEntry) {
+            }, function (fileEntry) {
                 var temp = [];
                 temp.push(fileEntry);
                 openFiles(temp, true);
@@ -2082,9 +2179,9 @@ $(document).ready(function() {
                 //create div
                 var div = document.createElement('div');
                 var material = getMaterial(fileEntry.name, true);
-
+                var path = cleanPath(fileEntry);
                 div.className = name + ' file';
-                div.setAttribute('path', fileEntry.fullPath);
+                div.setAttribute('path', path);
                 div.innerHTML = material + fileEntry.name;
                 folderToRemove.children().last().append(div);
                 closeNewFileDialog();
@@ -2095,6 +2192,7 @@ $(document).ready(function() {
     var editIndex;
 
     function checkTabs(name, path) {
+        path = cleanPath(path);
         for (var t = 0; t < $('.tab').length; t++) {
             if ($('.tab').eq(t).attr('path') == path && $('.tab').eq(t).find('.title').val() == name) {
                 editIndex = t;
@@ -2103,9 +2201,10 @@ $(document).ready(function() {
         }
     }
     //remove
-    $('.remove-buttons .remove-yes').click(function() {
+    $('.remove-buttons .remove-yes').click(function () {
         function getMatchingEntry(obj) {
-            if (obj.entry.name == contextMenuName && obj.entry.fullPath == contextMenuPath) {
+            var path = cleanPath(obj.entry);
+            if (obj.entry.name == contextMenuName && path == contextMenuPath) {
                 return obj;
             }
         }
@@ -2114,25 +2213,25 @@ $(document).ready(function() {
         projectFileEntry = projectFileEntry.entry;
         if (checkTabs(contextMenuName, projectFileEntry.fullPath) === true) {
             closeTab($('.tab').eq(editIndex).find('.close'));
-            projectFileEntry.remove(function() {
+            projectFileEntry.remove(function () {
                 fileToRemove.remove();
                 closeRemoveDialog();
-                editor[$('.active').index()].focus();
+                focusEditor();
             });
         } else {
-            projectFileEntry.remove(function() {
+            projectFileEntry.remove(function () {
                 fileToRemove.remove();
                 closeRemoveDialog();
-                editor[$('.active').index()].focus();
+                focusEditor();
             });
         }
     });
-    $('.remove-buttons .remove-no').click(function() {
+    $('.remove-buttons .remove-no').click(function () {
         closeRemoveDialog();
-        editor[$('.active').index()].focus();
+        focusEditor();
     });
 
-    $(document).on('mousedown', function(e) {
+    $(document).on('mousedown', function (e) {
         var target = e.target;
         if (!$(target).parents().is('.contextmenu') || !$(target).parents().is('.folder-contextmenu')) {
             contextMenuOff();
@@ -2156,12 +2255,12 @@ $(document).ready(function() {
         if (!fileEntry) {
             console.log('User cancelled saving.');
         } else {
-            chrome.fileSystem.getWritableEntry(fileEntry, function(writableFileEntry) {
-                writableFileEntry.createWriter(function(fileWriter) {
+            chrome.fileSystem.getWritableEntry(fileEntry, function (writableFileEntry) {
+                writableFileEntry.createWriter(function (fileWriter) {
                     var contents = editor[$('.active').index()].getDoc().getValue();
                     var blob = new Blob([contents]);
                     var truncated = false;
-                    fileWriter.onwriteend = function(e) {
+                    fileWriter.onwriteend = function (e) {
                         if (!truncated) {
                             truncated = true;
                             // You need to explicitly set the file size to truncate
@@ -2198,7 +2297,7 @@ $(document).ready(function() {
             acceptsAllTypes: true
         }, exportToFileEntry);
     }
-    $('.save').click(function() {
+    $('.save').click(function () {
         savedFileEntry = fileDirs[$('.active').index()];
         if (savedFileEntry) {
             exportToFileEntry(savedFileEntry);
@@ -2211,11 +2310,11 @@ $(document).ready(function() {
             }, exportToFileEntry);
         }
     });
-    $('.save-as').click(function() {
+    $('.save-as').click(function () {
         ExportToDisk();
     });
 
-    $('.tidy-up').click(function() {
+    $('.tidy-up').click(function () {
         var text = editor[$('.active').index()].getValue();
         var beautified;
         if ($('.active .title').val().indexOf('.html') > -1) {
@@ -2238,7 +2337,7 @@ $(document).ready(function() {
         editor[$('.active').index()].setValue(beautified);
     });
     //drag and drop
-    var dnd = new DnDFileController('body', function(data) {
+    var dnd = new DnDFileController('body', function (data) {
         var temp = [];
         for (var r = 0; r < data.items.length; r++) {
             temp.push(data.items[r].webkitGetAsEntry());
@@ -2284,7 +2383,7 @@ $(document).ready(function() {
             width: tabWidth + 'px'
         });
     }
-    $(window).resize(function() {
+    $(window).resize(function () {
         var width = $('.sidebar').width();
         calcWidth(width);
         resizeTabs();
@@ -2301,7 +2400,7 @@ $(document).ready(function() {
     function setFullscreen() {
         $('.windowBar').stop().animate({
             marginTop: '-30px'
-        }, 200, function() {
+        }, 200, function () {
             $(this).hide();
         });
         $('.tabs, .sidebar, .overflow-menu').css({
@@ -2333,16 +2432,16 @@ $(document).ready(function() {
         }
         $('.workspace').css('margin-top', '80px');
     }
-    $('.started-button').click(function() {
+    $('.started-button').click(function () {
         $('.getting-started').stop().animate({
             top: '-100%',
             opacity: '0'
-        }, 400, function() {
+        }, 400, function () {
             $(this).remove();
         });
         installed = true;
         saveData();
-        editor[$('.active').index()].focus();
+        focusEditor();
     });
 
     function loadGettingStarted() {
@@ -2352,6 +2451,39 @@ $(document).ready(function() {
         }, 800);
     }
     //save & load data or 'remember' tabs and settings
+    function setData(textArray, tabArray, editArray, installed, activeIndex, sideWidth, projectSize, projectAmount){
+        chrome.storage.local.set({
+            data: textArray,
+            tabs: tabArray,
+            state: editArray,
+            inst: installed,
+            actv: activeIndex,
+            sideBarWidth: sideWidth,
+            projectsize: projectSize,
+            projectamount: projectAmount
+        });
+        var key = [];
+        fileDirs.forEach(function (element, index) {
+            if (element === '' || element === undefined) {} else {
+                var entry = chrome.fileSystem.retainEntry(element);
+                key.push({
+                    index: index,
+                    entry: entry
+                });
+            }
+        });
+        var newProjectDir;
+        if (projectDir === undefined || projectDir === null) {
+            newProjectDir = '';
+        } else {
+            newProjectDir = chrome.fileSystem.retainEntry(projectDir);
+        }
+        chrome.storage.local.set({
+            chosenFiles: key,
+            chosenDirs: rootDirs,
+            chosenDir: newProjectDir
+        });
+    }
     function saveData(callback) {
         tabArray = [];
         textArray = [];
@@ -2360,6 +2492,7 @@ $(document).ready(function() {
             var index = i;
             var text = editor[index].getValue();
             var state = $('.tab').eq(index).find('.material-icons').text();
+            var projectAmount = rootDirs.length;
             var remaining = index;
             textArray[index] = text;
             tabArray[index] = {
@@ -2371,35 +2504,19 @@ $(document).ready(function() {
             var activeIndex = $('.active').index(),
                 sideWidth = $('.sidebar').width();
             if (remaining === $('.tab').length - 1) {
-                chrome.storage.local.set({
-                    data: textArray,
-                    tabs: tabArray,
-                    state: editArray,
-                    inst: installed,
-                    actv: activeIndex,
-                    sideBarWidth: sideWidth
-                });
-                var key = [];
-                fileDirs.forEach(function(element, index) {
-                    if (element === '' || element === undefined) {} else {
-                        var entry = chrome.fileSystem.retainEntry(element);
-                        key.push({
-                            index: index,
-                            entry: entry
+                var projectSize = 0;
+                if(rootDirs.length === 0){
+                    setData(textArray, tabArray, editArray, installed, activeIndex, sideWidth, projectSize, projectAmount);
+                }else{
+                    for(var g = 0; g < rootDirs.length; g++){
+                        chrome.fileSystem.restoreEntry(rootDirs[g],function(entry){
+                            entry.getMetadata(function(metadata){
+                                projectSize += Math.ceil(metadata.size);
+                                setData(textArray, tabArray, editArray, installed, activeIndex, sideWidth, projectSize, projectAmount);
+                            });
                         });
                     }
-                });
-                var newProjectDir;
-                if (projectDir === undefined || projectDir === null) {
-                    newProjectDir = '';
-                } else {
-                    newProjectDir = chrome.fileSystem.retainEntry(projectDir);
                 }
-                chrome.storage.local.set({
-                    chosenFiles: key,
-                    chosenDirs: rootDirs,
-                    chosenDir: newProjectDir
-                });
             }
         }
         if (!callback) {} else {
@@ -2413,7 +2530,6 @@ $(document).ready(function() {
         $('.workspace').width($(window).width() - sideBarWidth);
         $('.search-container').width($(window).width() - sideBarWidth);
     }
-
     function loadData(launchData) {
         chrome.storage.local.get({
             data: 'textArray',
@@ -2421,20 +2537,34 @@ $(document).ready(function() {
             state: 'editArray',
             inst: 'installed',
             actv: 'activeIndex',
-            sideBarWidth: 'sideWidth'
-        }, function(item) {
-            var data = item.data;
-            var tabs = item.tabs;
-            var state = item.state;
-            var inst = item.inst;
-            var actv = item.actv;
-            var sideBarWidth = item.sideBarWidth;
-            //sneaky loading algorithm
-            //to prevent chosenFiles and chosenDirs
-            //from being interupted while loading
-            var time = Math.ceil(Math.random() * ((2300 - 1800) + 1) + 1800) * Math.log(JSON.stringify(data).length * 8) / 8;
-
-            if (data == 'textArray' || tabs == 'tabArray' || state == 'editArray' || actv == 'activeIndex' || inst == 'installed' || sideBarWidth == 'sideWidth') {
+            sideBarWidth: 'sideWidth',
+            projectsize: 'projectSize',
+            projectamount: 'projectAmount'
+        }, function (item) {
+            var data = item.data,
+                tabs = item.tabs,
+                state = item.state,
+                inst = item.inst,
+                actv = item.actv,
+                sideBarWidth = item.sideBarWidth,
+                projectsize = item.projectsize,
+                projectamount = item.projectamount;
+            var dataSize = (JSON.stringify(data).length * 8) / 10000;
+            if(projectamount === 0){
+                time = Math.ceil(dataSize);
+            }else{
+                time = (Math.ceil(projectsize + dataSize) / projectamount * projectamount) / 5;
+            }
+            if(Number.isFinite(time) == false){
+                time = 1000;
+            }
+            if (time > 15000){
+                time = 15000;
+            }
+            if(time < 5000){
+                time = 2000;
+            }
+            if (data == 'textArray' || tabs == 'tabArray' || state == 'editArray' || actv == 'activeIndex' || inst == 'installed' || sideBarWidth == 'sideWidth' || projectsize == 'projectSize' || projectamount == 'projectAmount') {
                 prefs = {
                     theme: 'material',
                     font: 'monospace',
@@ -2446,11 +2576,11 @@ $(document).ready(function() {
                 loadAutoTab();
                 loadSettings(prefs);
                 calcWidth(250);
-                setTimeout(function() {
+                setTimeout(function () {
                     openLaunchData();
                     resizeTabs();
                     preLoad();
-                    setTimeout(function() {
+                    setTimeout(function () {
                         loadGettingStarted();
                     }, 200);
                 }, 1000);
@@ -2480,31 +2610,31 @@ $(document).ready(function() {
                             chosenFiles: 'key',
                             chosenDirs: 'rootDirs',
                             chosenDir: 'newProjectDir'
-                        }, function(items) {
+                        }, function (items) {
                             var chosenFiles = items.chosenFiles;
                             var chosenDirs = items.chosenDirs;
                             var chosenDir = items.chosenDir;
                             if (chosenFiles != 'key') {
-                                chosenFiles.forEach(function(elem, index, array) {
-                                    chrome.fileSystem.isRestorable(elem.entry, function(bisRestorable) {
-                                        chrome.fileSystem.restoreEntry(elem.entry, function(thisEntry) {
+                                chosenFiles.forEach(function (elem, index, array) {
+                                    chrome.fileSystem.isRestorable(elem.entry, function (bisRestorable) {
+                                        chrome.fileSystem.restoreEntry(elem.entry, function (thisEntry) {
                                             fileDirs[elem.index] = thisEntry;
                                         });
                                     });
                                 });
                             }
                             if (chosenDir != 'newProjectDir' && chosenDir != '') {
-                                chrome.fileSystem.isRestorable(chosenDir, function(isRestorable) {
-                                    chrome.fileSystem.restoreEntry(chosenDir, function(entry) {
+                                chrome.fileSystem.isRestorable(chosenDir, function (isRestorable) {
+                                    chrome.fileSystem.restoreEntry(chosenDir, function (entry) {
                                         setChosenDirInd(entry);
                                     });
                                 });
                             }
                             if (chosenDirs != 'rootDirs') {
                                 docFrag = document.createDocumentFragment();
-                                chosenDirs.forEach(function(elem, index, array) {
-                                    chrome.fileSystem.isRestorable(elem, function(isRestorable) {
-                                        chrome.fileSystem.restoreEntry(elem, function(entry) {
+                                chosenDirs.forEach(function (elem, index, array) {
+                                    chrome.fileSystem.isRestorable(elem, function (isRestorable) {
+                                        chrome.fileSystem.restoreEntry(elem, function (entry) {
                                             rootDirs.push(chrome.fileSystem.retainEntry(entry));
                                             reloadDirEntries(entry);
                                         });
@@ -2513,7 +2643,7 @@ $(document).ready(function() {
                             }
                         });
                         calcWidth(sideBarWidth);
-                        setTimeout(function() {
+                        setTimeout(function () {
                             openLaunchData();
                             $('.projects').append(docFrag.children);
                             sortDirect();
@@ -2537,7 +2667,7 @@ $(document).ready(function() {
             }
         }
     }
-    chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+    chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         if (message.open) {
             openLaunchData();
         }
@@ -2546,17 +2676,17 @@ $(document).ready(function() {
     function callback() {
         chrome.app.window.current().close();
     }
-    $(document).delegate('.app-windowbar-close', 'click', function() {
+    $(document).delegate('.app-windowbar-close', 'click', function () {
         saveData(callback);
     });
-    $(window).mouseleave(function() {
+    $(window).mouseleave(function () {
         saveData();
     });
-    $(document).delegate('.app-windowbar-minimize', 'click', function() {
+    $(document).delegate('.app-windowbar-minimize', 'click', function () {
         chrome.app.window.current().minimize();
     });
-    $(document).delegate('.app-windowbar-maximize', 'click', function() {
-        editor[$('.active').index()].focus();
+    $(document).delegate('.app-windowbar-maximize', 'click', function () {
+        focusEditor();
         if (chrome.app.window.current().isMaximized()) {
             chrome.app.window.current().restore();
         } else {

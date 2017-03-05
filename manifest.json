@@ -1,9 +1,9 @@
 {
-	"manifest_version": 2,
+    "manifest_version": 2,
     "name": "Quantum",
     "short_name": "Quantum",
     "description": "A simple and elegant code editor.",
-    "version": "3.7",
+    "version": "3.8",
     "minimum_chrome_version": "38",
     "offline_enabled": true,
 
