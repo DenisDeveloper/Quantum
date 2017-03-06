@@ -1,4 +1,4 @@
-//Quantum v3.8
+//Quantum v3.9
 //Author: Carlos E. Santos
 $(document).ready(function () {
     function preLoad() {
