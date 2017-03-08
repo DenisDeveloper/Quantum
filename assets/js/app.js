@@ -1,4 +1,4 @@
-//Quantum v4.1
+//Quantum v4.2
 //Author: Carlos E. Santos
 $(document).ready(function() {
     function preLoad() {
@@ -147,6 +147,7 @@ $(document).ready(function() {
         $('.workspace, body').css('background-color', color);
         $('.windowBar').css('background-color', shadeRGBColor(color, 0.1));
         $('.settings-container').css('background-color', shadeRGBColor(color, -0.1));
+        $('.active-file').css('box-shadow', 'inset 3px 0px 0px 0px ' + $('.active').css('box-shadow').replace(/^.*(rgba?\([^)]+\)).*$/,'$1'));
     }
 
     function loadSettings(prefs) {
@@ -238,6 +239,7 @@ $(document).ready(function() {
         var color = $('.CodeMirror').css('background-color');
         loadColor(color);
         changeTabTheme(color);
+        $('.active-file').css('box-shadow', 'inset 3px 0px 0px 0px ' + $('.active').css('box-shadow').replace(/^.*(rgba?\([^)]+\)).*$/,'$1'));
         openDropDown($(this).parent());
         savePrefs();
     });
@@ -346,6 +348,7 @@ $(document).ready(function() {
                 div.setAttribute('path', path);
                 div.innerHTML = material + fileEntry.name;
                 folderUsed.children().last().append(div);
+                setMaterialPadding(folderUsed.children().last().children().last());
                 savePrefs();
             });
         });
@@ -383,6 +386,12 @@ $(document).ready(function() {
                     switch (name) {
                         case 'jquery.min.js':
                             getFile('https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js', name);
+                            break;
+                        case 'matter.min.js':
+                            getFile('https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.10.0/matter.min.js', name);
+                            break;
+                        case 'p5.min.js':
+                            getFile('https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.7/p5.min.js', name);
                             break;
                         case 'angular.min.js':
                             getFile('https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.1/angular.min.js', name);
@@ -530,6 +539,14 @@ $(document).ready(function() {
             $('.active .close').text('fiber_manual_record');
             $('.active .close').addClass('edit');
         });
+        var charWidth = editor[g].defaultCharWidth(),
+            basePadding = 4;
+        editor[g].on('renderLine', function(cm, line, elt) {
+        	var off = CodeMirror.countColumn(line.text, null, cm.getOption("tabSize")) * charWidth;
+        	elt.style.textIndent = '-' + off + 'px';
+        	elt.style.paddingLeft = (basePadding + off) + 'px';
+      	});
+        editor[g].refresh();
     }
 
 
@@ -617,11 +634,74 @@ $(document).ready(function() {
             $('.CodeMirror').eq($('.active').index()).show();
             changeMode();
             savedFileEntry = fileDirs[$(this).index()];
-            editor[$('.active').index()].refresh();
+            $('.file').removeClass('active-file');
+            $('.file').css('box-shadow', 'none');
+            $('.file[path="' + $(this).attr('path') + '"]').addClass('active-file');
+            $('.active-file').css('box-shadow', 'inset 3px 0px 0px 0px ' + $('.active').css('box-shadow').replace(/^.*(rgba?\([^)]+\)).*$/,'$1'));
             focusEditor();
         }
     });
 
+    var tooltipTimer;
+    $(document).on('mouseenter', '.tab input', function(){
+        var input = $(this),
+            tab = input.parent(),
+            path = tab.attr('path');
+
+        var fileName = $(this).val();
+        function getMatchingEntry(obj){
+            var objPath = cleanPath(obj.entry);
+            if(obj.entry.name == fileName && objPath == path){
+                return obj;
+            }
+        }
+        function getMatchingFileDir(obj){
+            var objPath = cleanPath(obj);
+            if(obj.name == fileName && objPath == path){
+                return obj;
+            }
+        }
+        var entry = files.find(getMatchingEntry);
+        if(entry === undefined){
+            entry = fileDirs.find(getMatchingFileDir);
+            if(entry == undefined){
+
+            }else{
+                chrome.fileSystem.getDisplayPath(entry, function(displayPath){
+                    path = displayPath;
+                });
+            }
+        }else{
+            entry = entry.entry;
+            chrome.fileSystem.getDisplayPath(entry, function(displayPath){
+                path = displayPath;
+            });
+        }
+        tooltipTimer = setTimeout(function(){
+            if(tab.attr('path') === undefined){
+            }else{
+                $('.tooltip').text(path);
+                $('.tooltip').css({
+                    top: input.offset().top + input.height() - 20,
+                    left: input.offset().left,
+                    backgroundColor: shadeRGBColor($('.active').css('box-shadow').replace(/^.*(rgba?\([^)]+\)).*$/,'$1'), 0.1)
+                });
+                $('.tooltip').show().animate({ 
+                    top : Number($('.tooltip').css('top').replace('px', '')) + 25, 
+                    opacity : '1'
+                }, 200);
+            }
+        }, 1200); 
+    });
+    $(document).on('mouseleave', '.tab', function(){
+        clearTimeout(tooltipTimer); 
+        $('.tooltip').animate({
+            top : Number($('.tooltip').css('top').replace('px', '')) - 25, 
+            opacity : '0'
+        }, 200, function(){
+            $(this).hide();
+        });
+    });
     function openSaveBox(closed) {
         closeOverflow();
         var docTitle = $('.active .title').val();
@@ -770,22 +850,6 @@ $(document).ready(function() {
             focusEditor();
         });
     }
-    var timer;
-    $('.search-bar').on('keyup focus', function() {
-        text = $('.search-bar').val();
-        cm = editor[$('.active').index()];
-        state = getSearchState(cm);
-        var cursor = getSearchCursor(cm, text, cm.getCursor('from'));
-        startSearch(cm, state, text);
-        cursor.findNext();
-        cm.scrollIntoView({
-            from: cursor.from(),
-            to: cursor.to()
-        }, 100);
-        if (text == '') {
-            $('.search-bar').css('box-shadow', 'inset 0px -1px 0px 0px rgba(0, 0, 0, 0.1)');
-        }
-    });
     $('.find_next').click(function() {
         text = $('.search-bar').val();
         cm = editor[$('.active').index()];
@@ -944,11 +1008,13 @@ $(document).ready(function() {
                     setFileName(fileEntry.name);
                     var path = cleanPath(fileEntry);
                     if (fromDir === false) {
+                        createPathAttr(path);
                         createDataAttr(fileEntry.name);
                     } else {
                         createDataAttr(fileEntry.name + 'isOpen');
                         createPathAttr(path);
                     }
+                    $('.active input').attr('readonly', true);
                     var newIndex = $('.active').attr('id').replace('tab', '');
                     var index = Number(newIndex);
                     var actIndex = $('.active').index();
@@ -1374,6 +1440,13 @@ $(document).ready(function() {
             }
         });
     });
+    function setMaterialPadding(parent){
+        var thisMaterial = parent.find('.material-icons').first();
+        var multiplier = parent.parentsUntil('.projects').length;
+        
+        var padding = (20 * (multiplier / 2)) + 20 + 'px';
+        thisMaterial.css('padding-left', padding);
+    }
     $(document).on('click', '.projects .folder', function(e) {
         e.stopPropagation();
         if ($(this).children('ul').is(':visible')) {
@@ -1390,6 +1463,9 @@ $(document).ready(function() {
             }
             $(this).css('color', 'rgba(255,255,255,0.8)');
         } else {
+            $(this).children('ul').children().each(function(index){
+                setMaterialPadding($(this));
+            });
             $(this).children('ul').show().velocity('slideDown', {
                 duration: 200
             });
@@ -1414,6 +1490,11 @@ $(document).ready(function() {
         e.stopPropagation();
         if (e.handled !== true) {
             e.handled = true;
+
+            $('.file').removeClass('active-file');
+            $('.file').css('box-shadow', 'none');
+            $(this).addClass('active-file');
+            $('.active-file').css('box-shadow', 'inset 3px 0px 0px 0px ' + $('.active').css('box-shadow').replace(/^.*(rgba?\([^)]+\)).*$/,'$1'));
             var temp = [],
                 fileNames = [];
             var thisName = $(this).clone().children().remove().end().text();
@@ -1835,7 +1916,11 @@ $(document).ready(function() {
                 var nameForClass = replaceName(newFileEntry.name);
                 var material = getMaterial(newFileEntry.name, false);
                 var path = cleanPath(newFileEntry);
-                fileToRemove.attr('class', nameForClass + ' file');
+                if(fileToRemove.hasClass('active-file')){
+                    fileToRemove.attr('class', nameForClass + ' file active-file');
+                }else{
+                    fileToRemove.attr('class', nameForClass + ' file');
+                }
                 fileToRemove.attr('path', path);
                 fileToRemove.find('.material-icons').first().text(material);
                 fileToRemove.get(0).childNodes[1].nodeValue = newFileEntry.name;
@@ -2083,6 +2168,7 @@ $(document).ready(function() {
                 folderToRemove.children().last().append(div);
                 folderToRemove.children().last().children().last().children().last().hide();
                 folderToRemove.children().last().children().last().insertBefore(folderToRemove.children().last().children().first());
+                setMaterialPadding(folderToRemove.children().last().children().first());
                 closeNewFolderDialog();
             });
         }
@@ -2174,10 +2260,13 @@ $(document).ready(function() {
                 var div = document.createElement('div');
                 var material = getMaterial(fileEntry.name, true);
                 var path = cleanPath(fileEntry);
-                div.className = name + ' file';
+                div.className = name + ' file active-file';
                 div.setAttribute('path', path);
                 div.innerHTML = material + fileEntry.name;
+                $('.file').removeClass('active-file');
+                $('.file').css('box-shadow', 'none');
                 folderToRemove.children().last().append(div);
+                setMaterialPadding(folderToRemove.children().last().children().last());
                 closeNewFileDialog();
             });
         }
@@ -2230,6 +2319,13 @@ $(document).ready(function() {
         if (!$(target).parents().is('.contextmenu') || !$(target).parents().is('.folder-contextmenu')) {
             contextMenuOff();
             folderContextOff();
+            clearTimeout(tooltipTimer); 
+            $('.tooltip').animate({
+                top : Number($('.tooltip').css('top').replace('px', '')) - 25, 
+                opacity : '0'
+            }, 200, function(){
+                $(this).hide();
+            });
         }
     });
 
@@ -2267,6 +2363,7 @@ $(document).ready(function() {
 
                     var fileName = writableFileEntry.name;
                     setFileName(fileName);
+                    $('.active input').attr('readonly', true);
                     fileDirs[$('.active').index()] = writableFileEntry;
                     if ($('.active').attr('data') === undefined || $('.active').attr('data') === false || $('.active').attr('data') === '') {
                         createDataAttr(fileName);
@@ -2493,7 +2590,8 @@ $(document).ready(function() {
             tabArray[index] = {
                 name: $('.tab').eq(index).find('.title').val(),
                 path: $('.tab').eq(index).attr('path'),
-                dataAttr: $('.tab').eq(index).attr('data')
+                dataAttr: $('.tab').eq(index).attr('data'),
+                isReadOnly: $('.tab').eq(index).find('input').attr('readonly')
             };
             editArray[index] = state;
             var activeIndex = $('.active').index(),
@@ -2591,6 +2689,7 @@ $(document).ready(function() {
                     editor[a].getDoc().clearHistory();
                     autoSave(a);
                     $('.tab').eq(a).find('.title').val(tabs[a].name);
+                    $('.tab').eq(a).find('.title').attr('readonly', tabs[a].isReadOnly);
                     $('.tab').eq(a).attr('data', tabs[a].dataAttr);
                     $('.tab').eq(a).attr('path', tabs[a].path);
                     if ($('.tab').eq(a).attr('data') === '') {

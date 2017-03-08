@@ -16,7 +16,7 @@
 .cm-s-zenburnesque .CodeMirror-guttermarker { color: #ef6155; }
 .cm-s-zenburnesque .CodeMirror-guttermarker-subtle { color: #776e71; }
 .cm-s-zenburnesque .CodeMirror-linenumber { color: #776e71; }
-.cm-s-zenburnesque .CodeMirror-cursor { border-left: 1px solid #8d8687; }
+.cm-s-zenburnesque .CodeMirror-cursor { border-left: 1px solid #c149ba; }
 
 .cm-s-zenburnesque span.cm-comment { color: #e96ba8; }
 .cm-s-zenburnesque span.cm-atom { color: #815ba4; }

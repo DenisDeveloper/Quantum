@@ -23,8 +23,41 @@
     // It takes a position and a direction, and returns an object
     // describing the next occurrence of the query, or null if no
     // more matches were found.
-
-    if(typeof query === 'string'){ // String query
+    if (typeof query != "string") { // Regexp match
+      if (!query.global) query = new RegExp(query.source, query.ignoreCase ? "ig" : "g");
+      this.matches = function(reverse, pos) {
+        if (reverse) {
+          query.lastIndex = 0;
+          var line = doc.getLine(pos.line).slice(0, pos.ch), cutOff = 0, match, start;
+          for (;;) {
+            query.lastIndex = cutOff;
+            var newMatch = query.exec(line);
+            if (!newMatch) break;
+            match = newMatch;
+            start = match.index;
+            cutOff = match.index + (match[0].length || 1);
+            if (cutOff == line.length) break;
+          }
+          var matchLen = (match && match[0].length) || 0;
+          if (!matchLen) {
+            if (start == 0 && line.length == 0) {match = undefined;}
+            else if (start != doc.getLine(pos.line).length) {
+              matchLen++;
+            }
+          }
+        } else {
+          query.lastIndex = pos.ch;
+          var line = doc.getLine(pos.line), match = query.exec(line);
+          var matchLen = (match && match[0].length) || 0;
+          var start = match && match.index;
+          if (start + matchLen != line.length && !matchLen) matchLen = 1;
+        }
+        if (match && matchLen)
+          return {from: Pos(pos.line, start),
+                  to: Pos(pos.line, start + matchLen),
+                  match: match};
+      };
+    } else { // String query
       var origQuery = query;
       if (caseFold) query = query.toLowerCase();
       var fold = caseFold ? function(str){return str.toLowerCase();} : function(str){return str;};
@@ -42,14 +75,21 @@
               var match = line.lastIndexOf(query);
               if (match > -1) {
                 match = adjustPos(orig, line, match);
+                $('.search-bar').css('box-shadow', 'inset 0px -1px 0px 0px rgba(255, 255, 255, 0.1)');  
                 return {from: Pos(pos.line, match), to: Pos(pos.line, match + origQuery.length)};
+              }else{
+                $('.search-bar').css('box-shadow', 'rgba(251, 19, 19, 0.63) 0px -1px 0px 0px inset');
               }
              } else {
                var orig = doc.getLine(pos.line).slice(pos.ch), line = fold(orig);
                var match = line.indexOf(query);
                if (match > -1) {
                  match = adjustPos(orig, line, match) + pos.ch;
+                 $('.search-bar').css('box-shadow', 'inset 0px -1px 0px 0px rgba(255, 255, 255, 0.1)');  
                  return {from: Pos(pos.line, match), to: Pos(pos.line, match + origQuery.length)};
+               }else{
+            		$('.search-bar').css('box-shadow', 'rgba(251, 19, 19, 0.63) 0px -1px 0px 0px inset');
+                   
                }
             }
           };
@@ -150,7 +190,8 @@
       if (CodeMirror.cmpPos(cur.to(), this.getCursor("to")) > 0) break;
       ranges.push({anchor: cur.from(), head: cur.to()});
     }
-    if (ranges.length)
-      this.setSelections(ranges, 0);
+    if (ranges.length){
+      	this.setSelections(ranges, 0);
+  	}
   });
 });

@@ -2,7 +2,7 @@
 .cm-s-darkpastel div.CodeMirror-selected {background: #433b42 !important;}
 .cm-s-darkpastel .CodeMirror-gutters {background: #322931; border-right: 0px;}
 .cm-s-darkpastel .CodeMirror-linenumber {color: #797379;}
-.cm-s-darkpastel .CodeMirror-cursor {border-left: 1px solid #989498 !important;}
+.cm-s-darkpastel .CodeMirror-cursor {border-left: 1px solid #ef5d32 !important;}
 
 .cm-s-darkpastel span.cm-comment {color: #b33508;}
 .cm-s-darkpastel span.cm-atom {color: #c85e7c;}

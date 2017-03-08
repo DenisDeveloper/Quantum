@@ -4272,7 +4272,6 @@
                 gP = dQ(i, gO.to);
             var gN = H(i, Math.min(gQ.left, gP.left), Math.min(gQ.top, gP.top) - gO.margin, Math.max(gQ.right, gP.right), Math.max(gQ.bottom, gP.bottom) + gO.margin);
             i.scrollTo(gN.scrollLeft, gN.scrollTop);
-            $('.search-bar').css('box-shadow', 'inset 0px -1px 0px 0px rgba(0, 0, 0, 0.1)');
         }
     }
     var el = 0;
@@ -9683,14 +9682,16 @@
                     clientWidth: dv(this)
                 }
             },
-            scrollIntoView: dh(function(gQ, gR, callback) {
+            scrollIntoView: dh(function(gQ, gR) {
                 if (gQ == null) {
                     gQ = {
                         from: this.doc.sel.primary().head,
                         to: null
                     };
+
                     if (gR == null) {
                         gR = this.options.cursorScrollMargin
+
                     }
                 } else {
                     if (typeof gQ == "number") {
@@ -9698,6 +9699,7 @@
                             from: W(gQ, 0),
                             to: null
                         }
+
                     } else {
                         if (gQ.from == null) {
                             gQ = {
@@ -9706,20 +9708,17 @@
                             }
                         }
                     }
-                    $('.search-bar').css('box-shadow', 'inset 0px -1px 0px 0px rgba(0, 0, 0, 0.1)');
                 }
                 if (!gQ.to) {
-                    gQ.to = gQ.from
-                    $('.search-bar').css('box-shadow', 'inset 0px -1px 0px 0px rgba(239, 37, 37, 0.58)');
+                    gQ.to = gQ.from;
                 }
                 gQ.margin = gR || 0;
                 if (gQ.from.line != null) {
                     fY(this);
-                    this.curOp.scrollToPos = gQ
+                    this.curOp.scrollToPos = gQ;
                 } else {
                     var gP = H(this, Math.min(gQ.from.left, gQ.to.left), Math.min(gQ.from.top, gQ.to.top) - gQ.margin, Math.max(gQ.from.right, gQ.to.right), Math.max(gQ.from.bottom, gQ.to.bottom) + gQ.margin);
                     this.scrollTo(gP.scrollLeft, gP.scrollTop);
-                    $('.search-bar').css('box-shadow', 'inset 0px -1px 0px 0px rgba(239, 37, 37, 0.58)');
                 }
                 
             }),

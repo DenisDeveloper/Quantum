@@ -9,7 +9,7 @@
   border: none;
 }
 .cm-s-material .CodeMirror-guttermarker, .cm-s-material .CodeMirror-guttermarker-subtle, .cm-s-material .CodeMirror-linenumber { color: rgb(83,127,126); }
-.cm-s-material .CodeMirror-cursor { border-left: 1px solid #f8f8f0; }
+.cm-s-material .CodeMirror-cursor { border-left: 1px solid #21ffd6; }
 .cm-s-material div.CodeMirror-selected { background: rgba(255, 255, 255, 0.15); }
 .cm-s-material.CodeMirror-focused div.CodeMirror-selected { background: rgba(255, 255, 255, 0.10); }
 .cm-s-material .CodeMirror-line::selection, .cm-s-material .CodeMirror-line > span::selection, .cm-s-material .CodeMirror-line > span > span::selection { background: rgba(255, 255, 255, 0.10); }
@@ -46,3 +46,4 @@
 }
 .active-material { box-shadow: inset 0px -2px 0px 0px #21ffd6; opacity: 1 !important;}
 .active-material .material-icons { color: #21ffd6; }
+}

@@ -71,7 +71,7 @@ body {
     background-image: url('../imgs/background.png');
     background-size: cover;
     background-repeat: no-repeat;
-    background-position: center;
+    background-position: left center;
 }
 
 .getting-started .started-title {
@@ -431,8 +431,14 @@ body {
     white-space: nowrap;
     cursor: default;
     display: block;
-    width: auto;
+    width: 100%;
     clear: both;
+    transition:all .2s ease-out;
+}
+
+.sidebar .projects .active-file{
+    background-color:rgba(255, 255, 255, 0.03);
+    color:rgba(255, 255, 255, 1);
 }
 
 .sidebar .projects .folder .material-icons {
@@ -443,12 +449,33 @@ body {
 }
 
 .sidebar .projects .folder ul {
+    width:100%;
     margin: 0;
-    padding-left: 20px;
+    padding: 0px;
     clear: both;
     float: left;
 }
 
+.tooltip{
+    width:auto;
+    height:40px;
+    text-align: left;
+    position:absolute;
+    color:#000;
+    line-height: 40px;
+    padding-left:10px;
+    padding-right:10px;
+    box-sizing: border-box;
+    border-radius:2px;
+    z-index:200;
+    box-shadow: 0px 3px 6px 0px rgba(0,0,0,0.2);
+    font-family: 'Roboto';
+    display:none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-all;
+    cursor:default;
+}
 .tabs {
     width: calc(100% - 320px);
     height: 50px;
@@ -491,10 +518,10 @@ body {
 }
 
 .tabs .tab input {
-    width: 70%;
+    width: 60%;
     border: none;
     background: none;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.5);
     text-align: left;
     outline: none;
     cursor: default;
@@ -728,7 +755,7 @@ body {
     outline: none;
     border: none;
     display: block;
-    font-size: 12px;
+    font-size: 14px;
     font-family: 'Roboto';
     background-color: inherit;
     color: rgba(255, 255, 255, 0.8);
@@ -739,7 +766,7 @@ body {
 }
 
 .search-container .searchbars input:first-child {
-    box-shadow: inset 0px -1px 0px 0px rgba(0, 0, 0, 0.1);
+    box-shadow: inset 0px -1px 0px 0px rgba(255, 255, 255, 0.1); 
 }
 
 .search-container .buttons div,
@@ -753,8 +780,8 @@ body {
     background-color: inherit;
     color: rgba(255, 255, 255, 0.7);
     transition: all .2s ease-out;
-    font-family: 'Roboto Med';
-    text-transform: uppercase;
+    font-family: 'Roboto';
+    text-transform: capitalize;
     cursor: default;
     font-size: 12px;
 }

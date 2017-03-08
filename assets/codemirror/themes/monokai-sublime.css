@@ -8,7 +8,7 @@
 .cm-s-monokai-sublime .CodeMirror-guttermarker { color: white; }
 .cm-s-monokai-sublime .CodeMirror-guttermarker-subtle { color: #d0d0d0; }
 .cm-s-monokai-sublime .CodeMirror-linenumber { color: #d0d0d0; }
-.cm-s-monokai-sublime .CodeMirror-cursor { border-left: 1px solid #f8f8f0; }
+.cm-s-monokai-sublime .CodeMirror-cursor { border-left: 1px solid #c2b964; }
 
 .cm-s-monokai-sublime span.cm-comment { color: #75715e; }
 .cm-s-monokai-sublime span.cm-atom { color: #ae81ff; }
