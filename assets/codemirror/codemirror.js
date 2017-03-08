@@ -4245,7 +4245,7 @@
         if (gN != null) {
             i.curOp.scrollTop = (i.curOp.scrollTop == null ? i.doc.scrollTop : i.curOp.scrollTop) + gN
         }
-    }s
+    }
 
     function f1(i) {
         fY(i);
