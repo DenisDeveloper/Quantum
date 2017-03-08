@@ -153,7 +153,7 @@
       if (!cursor.find(rev)) return;
     }
     cm.setSelection(cursor.from(), cursor.to());
-    cm.scrollIntoView({from: cursor.from(), to: cursor.to()}, 20);
+    cm.scrollIntoView({from: cursor.from(), to: cursor.to()}, 100);
     state.posFrom = cursor.from(); state.posTo = cursor.to();
     if (callback) callback(cursor.from(), cursor.to())
   });}
