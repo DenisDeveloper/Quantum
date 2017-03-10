@@ -1,0 +1,83 @@
+/*
+	Name:       Panda Syntax
+	Author:     Siamak Mokhtari (http://github.com/siamak/)
+	CodeMirror template by Siamak Mokhtari (https://github.com/siamak/atom-mono-industrial)
+*/
+.cm-s-mono-industrial {
+	background: #292A2B;
+	color: #E6E6E6;
+	line-height: 1.5;
+}
+.cm-s-mono-industrial .CodeMirror-cursor { border-color: #ff2c6d; }
+.cm-s-mono-industrial .CodeMirror-selected {
+	background: rgba(255,255,255,0.2);
+}
+.cm-s-mono-industrial .cm-comment {
+	font-style: italic;
+	color: #676B79;
+}
+.cm-s-mono-industrial .cm-operator {
+	color: #f3f3f3;
+}
+.cm-s-mono-industrial .cm-string {
+	color: #19F9D8;
+}
+.cm-s-mono-industrial .cm-string-2 {
+    color: #FFB86C;
+}
+
+.cm-s-mono-industrial .cm-tag {
+	color: #ff2c6d;
+}
+.cm-s-mono-industrial .cm-meta {
+	color: #b084eb;
+}
+
+.cm-s-mono-industrial .cm-number {
+	color: #FFB86C;
+}
+.cm-s-mono-industrial .cm-atom {
+	color: #ff2c6d;
+}
+.cm-s-mono-industrial .cm-keyword {
+	color: #FF75B5;
+}
+.cm-s-mono-industrial .cm-variable {
+	color: #ffb86c;
+}
+.cm-s-mono-industrial .cm-variable-2 {
+	color: #ff9ac1;
+}
+.cm-s-mono-industrial .cm-variable-3 {
+	color: #ff9ac1;
+}
+
+.cm-s-mono-industrial .cm-def {
+	color: #e6e6e6;
+}
+.cm-s-mono-industrial .cm-property {
+	color: #f3f3f3;
+}
+.cm-s-mono-industrial .cm-unit {
+    color: #ffb86c;
+}
+
+.cm-s-mono-industrial .cm-attribute {
+    color: #ffb86c;
+}
+
+.cm-s-mono-industrial .CodeMirror-matchingbracket {
+    border-bottom: 1px dotted #19F9D8;
+    padding-bottom: 2px;
+    color: #e6e6e6;
+}
+.cm-s-mono-industrial .CodeMirror-gutters {
+    background: #292a2b;
+    border:none;
+}
+.cm-s-mono-industrial .CodeMirror-linenumber {
+    color: #e6e6e6;
+    opacity: 0.6;
+}
+.active-mono-industrial { box-shadow: inset 0px -2px 0px 0px #d62a33 ; opacity: 1 !important;}
+.active-mono-industrial .material-icons { color: #d62a33; }

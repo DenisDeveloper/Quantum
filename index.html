@@ -5,6 +5,7 @@
     <link type="text/css" rel="stylesheet" href="assets/window/windowBar.css" />
     <link type="text/css" rel="stylesheet" href="assets/codemirror/codemirror.css" />
     <link type="text/css" rel="stylesheet" href="assets/codemirror/addon/fold/foldgutter.css">
+    <link type="text/css" rel="stylesheet" href="assets/codemirror/addon/lint/lint.css">
     <link type="text/css" rel="stylesheet" href="assets/css/jquery-ui.css" />
     <link type="text/css" rel="stylesheet" href="assets/codemirror/themes/material.css" />
     <link type="text/css" rel='stylesheet' href='assets/codemirror/themes/birds-of-paradise.css'>
@@ -12,7 +13,7 @@
     <link type="text/css" rel='stylesheet' href='assets/codemirror/themes/friendship-bracelet.css'>
     <link type="text/css" rel='stylesheet' href='assets/codemirror/themes/monokai-sublime.css'>
     <link type="text/css" rel='stylesheet' href='assets/codemirror/themes/purplenight.css'>
-    <link type="text/css" rel='stylesheet' href='assets/codemirror/themes/tomorrow-night-bright.css'>
+    <link type="text/css" rel='stylesheet' href='assets/codemirror/themes/mono-industrial.css'>
     <link type="text/css" rel='stylesheet' href='assets/codemirror/themes/zenburnesque.css'>
     <link type="text/css" rel="stylesheet" href="assets/css/main.css" />
 </head>
@@ -27,8 +28,6 @@
         <div class="loading-text"></div>
     </div>
     <div class="getting-started">
-        <div class="started-title">Welcome to <span>Quantum</span></div>
-        <div class="started-content"></div>
         <div class="started-button">Start Now</div>
     </div>
     <div class="windowBar"></div>
@@ -39,6 +38,11 @@
             <div class="material-icons close-settings">close</div>
         </div>
         <div class="settings">
+            <div class="settingdiv">
+            	<div class="settingtitle">Linter</div>
+                <div class="description checkbox-description"><div class="text">Helps to detect errors or potential problems in code.</div><div class="checkbox"><div class="material-icons"></div></div></div>
+                
+            </div>
             <div class="settingdiv">
             	<div class="settingtitle">Libraries</div>
                 <div class="description">Add an open-source library to your current folder.</div>
@@ -69,9 +73,9 @@
                     <div class="theme">darkpastel</div>
                     <div class="theme">friendship bracelet</div>
                     <div class="theme">material</div>
+                    <div class="theme">mono industrial</div>
                     <div class="theme">monokai sublime</div>
                     <div class="theme">purplenight</div>
-                    <div class="theme">tomorrow night bright</div>
                     <div class="theme">zenburnesque</div>
                 </div>
             </div>
@@ -214,15 +218,15 @@
         </div>
     </div>
     <div class="contextmenu">
-        <div class="rename"><div class="material-icons">format_quote</div>Rename</div>
-        <div class="remove"><div class="material-icons">delete</div>Remove</div>
+        <div class="rename">Rename</div>
+        <div class="remove">Remove</div>
     </div>
     <div class="folder-contextmenu">
-        <div class="folder-addfolder"><div class="material-icons">create_new_folder</div>New Folder</div>
-        <div class="folder-addfile"><div class="material-icons">note_add</div>New File</div>
-        <div class="folder-rename"><div class="material-icons">format_quote</div>Rename Folder</div>
-        <div class="folder-remove"><div class="material-icons">delete_forever</div>Remove Permanently</div>
-        <div class="folder-removefromproject"><div class="material-icons">delete</div>Remove from Projects</div>
+        <div class="folder-addfolder">New Folder</div>
+        <div class="folder-addfile">New File</div>
+        <div class="folder-rename">Rename Folder</div>
+        <div class="folder-remove">Remove Permanently</div>
+        <div class="folder-removefromproject">Remove from Projects</div>
     </div>
     <div class="new-project-dialogue">
         <div class="new-project-dialogue-title">New Project</div>
@@ -274,6 +278,13 @@
     <script type="text/javascript" src="assets/codemirror/addon/edit/closebrackets.js"></script>
     <script type="text/javascript" src="assets/codemirror/addon/search/searchcursor.js"></script>
     <script type="text/javascript" src="assets/codemirror/addon/search/search.js"></script>
+    <script type="text/javascript" src="assets/codemirror/addon/lint/jshint.js"></script>
+    <script type="text/javascript" src="assets/codemirror/addon/lint/jsonlint.js"></script>
+    <script type="text/javascript" src="assets/codemirror/addon/lint/csslint.js"></script>
+    <script type="text/javascript" src="assets/codemirror/addon/lint/lint.js"></script>
+    <script type="text/javascript" src="assets/codemirror/addon/lint/javascript-lint.js"></script>
+    <script type="text/javascript" src="assets/codemirror/addon/lint/json-lint.js"></script>
+    <script type="text/javascript" src="assets/codemirror/addon/lint/css-lint.js"></script>
     <script type="text/javascript" src="/mode/loadmode/loadmode.js"></script>
     <script type="text/javascript" src="/mode/meta.js"></script>
     <script type="text/javascript" src="assets/js/dnd.js"></script>

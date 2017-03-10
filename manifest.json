@@ -3,7 +3,7 @@
     "name": "Quantum",
     "short_name": "Quantum",
     "description": "A simple and elegant code editor.",
-    "version": "4.2",
+    "version": "4.6",
     "minimum_chrome_version": "38",
     "offline_enabled": true,
 

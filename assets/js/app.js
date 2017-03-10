@@ -1,4 +1,4 @@
-//Quantum v4.2
+//Quantum v4.6
 //Author: Carlos E. Santos
 $(document).ready(function() {
     function preLoad() {
@@ -70,7 +70,8 @@ $(document).ready(function() {
         indentUnit: 4,
         foldGutter: true,
         dragDrop: false,
-        gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
+        gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter', 'CodeMirror-lint-markers'],
+        lint: false,
         theme: 'material',
         mode: 'text/plain'
     };
@@ -113,13 +114,20 @@ $(document).ready(function() {
         var font = $('.CodeMirror').css('font-family'),
             fontSize = $('.CodeMirror').css('font-size'),
             library = $('.selector-library').clone().children().remove().end().text();
+        var lint;
+        if ($('.checkbox').hasClass('active-checkbox')) {
+            lint = true;
+        } else {
+            lint = false;
+        }
         prefs = {
             theme: config.theme,
             font: font,
             fontSize: fontSize,
             tabSize: config.tabSize,
             softWrap: config.lineWrapping,
-            library: library
+            library: library,
+            lint: lint
         };
         chrome.storage.local.set({
             settings: prefs
@@ -147,7 +155,7 @@ $(document).ready(function() {
         $('.workspace, body').css('background-color', color);
         $('.windowBar').css('background-color', shadeRGBColor(color, 0.1));
         $('.settings-container').css('background-color', shadeRGBColor(color, -0.1));
-        $('.active-file').css('box-shadow', 'inset 3px 0px 0px 0px ' + $('.active').css('box-shadow').replace(/^.*(rgba?\([^)]+\)).*$/,'$1'));
+        $('.active-file').css('box-shadow', 'inset 3px 0px 0px 0px ' + $('.active').css('box-shadow').replace(/^.*(rgba?\([^)]+\)).*$/, '$1'));
     }
 
     function loadSettings(prefs) {
@@ -156,6 +164,7 @@ $(document).ready(function() {
         setEditorOption('theme', prefs.theme);
         setEditorOption('tabSize', prefs.tabSize);
         setEditorOption('lineWrapping', prefs.softWrap);
+        setEditorOption('lint', prefs.lint);
         $('.active').attr('class', 'tab active active-' + prefs.theme);
         var color = $('.CodeMirror').css('background-color');
         loadColor(color);
@@ -163,6 +172,7 @@ $(document).ready(function() {
         config.tabSize = prefs.tabSize;
         config.indentUnit = prefs.tabSize;
         config.lineWrapping = prefs.softWrap;
+        config.lint = prefs.lint;
         changeTabTheme(color);
         refreshEditors();
     }
@@ -181,6 +191,11 @@ $(document).ready(function() {
             prefs.library = 'jquery.min.js';
         }
         $('.selector-library').html(prefs.library + '<div class="material-icons">arrow_drop_down</div>');
+
+        if (prefs.lint === false) {} else {
+            $('.checkbox').addClass('active-checkbox');
+            $('.checkbox').find('.material-icons').text('check');
+        }
     }
 
     function loadPrefs() {
@@ -189,14 +204,7 @@ $(document).ready(function() {
         }, function(item) {
             var setting = item.settings;
             if (setting == 'prefs' || setting === undefined || setting === null) {
-                prefs = {
-                    theme: 'material',
-                    font: 'monospace',
-                    fontSize: '14px',
-                    tabSize: 4,
-                    softWrap: true,
-                    library: 'jquery.min.js'
-                };
+                resetPrefs();
                 loadSettings(prefs);
                 setSelectors(prefs);
             } else {
@@ -229,6 +237,18 @@ $(document).ready(function() {
             $('.top-title').css('box-shadow', 'none');
         }
     });
+    $(document).on('click', '.checkbox', function() {
+        if ($(this).hasClass('active-checkbox')) {
+            $(this).removeClass('active-checkbox');
+            $(this).find('.material-icons').text('');
+            setEditorOption('lint', false);
+        } else {
+            $(this).addClass('active-checkbox');
+            $(this).find('.material-icons').text('check');
+            setEditorOption('lint', true);
+        }
+        savePrefs();
+    });
     $(document).on('click', '.dropdown .theme', function() {
         var option = 'theme',
             value = $(this).text().replace(/ /g, '-');
@@ -239,7 +259,7 @@ $(document).ready(function() {
         var color = $('.CodeMirror').css('background-color');
         loadColor(color);
         changeTabTheme(color);
-        $('.active-file').css('box-shadow', 'inset 3px 0px 0px 0px ' + $('.active').css('box-shadow').replace(/^.*(rgba?\([^)]+\)).*$/,'$1'));
+        $('.active-file').css('box-shadow', 'inset 3px 0px 0px 0px ' + $('.active').css('box-shadow').replace(/^.*(rgba?\([^)]+\)).*$/, '$1'));
         openDropDown($(this).parent());
         savePrefs();
     });
@@ -529,7 +549,6 @@ $(document).ready(function() {
             }
             editor.move(oldIndex, newIndex);
             fileDirs.move(oldIndex, newIndex);
-            refreshEditors();
             focusEditor();
         }
     }).disableSelection();
@@ -542,11 +561,10 @@ $(document).ready(function() {
         var charWidth = editor[g].defaultCharWidth(),
             basePadding = 4;
         editor[g].on('renderLine', function(cm, line, elt) {
-        	var off = CodeMirror.countColumn(line.text, null, cm.getOption("tabSize")) * charWidth;
-        	elt.style.textIndent = '-' + off + 'px';
-        	elt.style.paddingLeft = (basePadding + off) + 'px';
-      	});
-        editor[g].refresh();
+            var off = CodeMirror.countColumn(line.text, null, cm.getOption("tabSize")) * charWidth;
+            elt.style.textIndent = '-' + off + 'px';
+            elt.style.paddingLeft = (basePadding + off) + 'px';
+        });
     }
 
 
@@ -637,71 +655,74 @@ $(document).ready(function() {
             $('.file').removeClass('active-file');
             $('.file').css('box-shadow', 'none');
             $('.file[path="' + $(this).attr('path') + '"]').addClass('active-file');
-            $('.active-file').css('box-shadow', 'inset 3px 0px 0px 0px ' + $('.active').css('box-shadow').replace(/^.*(rgba?\([^)]+\)).*$/,'$1'));
+            $('.active-file').css('box-shadow', 'inset 3px 0px 0px 0px ' + $('.active').css('box-shadow').replace(/^.*(rgba?\([^)]+\)).*$/, '$1'));
+            editor[$('.active').index()].refresh();
             focusEditor();
         }
     });
 
     var tooltipTimer;
-    $(document).on('mouseenter', '.tab input', function(){
+    $(document).on('mouseenter', '.tab input', function() {
         var input = $(this),
             tab = input.parent(),
             path = tab.attr('path');
 
         var fileName = $(this).val();
-        function getMatchingEntry(obj){
+
+        function getMatchingEntry(obj) {
             var objPath = cleanPath(obj.entry);
-            if(obj.entry.name == fileName && objPath == path){
+            if (obj.entry.name == fileName && objPath == path) {
                 return obj;
             }
         }
-        function getMatchingFileDir(obj){
+
+        function getMatchingFileDir(obj) {
             var objPath = cleanPath(obj);
-            if(obj.name == fileName && objPath == path){
+            if (obj.name == fileName && objPath == path) {
                 return obj;
             }
         }
         var entry = files.find(getMatchingEntry);
-        if(entry === undefined){
+        if (entry === undefined) {
             entry = fileDirs.find(getMatchingFileDir);
-            if(entry == undefined){
+            if (entry === undefined) {
 
-            }else{
-                chrome.fileSystem.getDisplayPath(entry, function(displayPath){
+            } else {
+                chrome.fileSystem.getDisplayPath(entry, function(displayPath) {
                     path = displayPath;
                 });
             }
-        }else{
+        } else {
             entry = entry.entry;
-            chrome.fileSystem.getDisplayPath(entry, function(displayPath){
+            chrome.fileSystem.getDisplayPath(entry, function(displayPath) {
                 path = displayPath;
             });
         }
-        tooltipTimer = setTimeout(function(){
-            if(tab.attr('path') === undefined){
-            }else{
+        tooltipTimer = setTimeout(function() {
+            if (tab.attr('path') === undefined) {} else {
                 $('.tooltip').text(path);
                 $('.tooltip').css({
                     top: input.offset().top + input.height() - 20,
                     left: input.offset().left,
-                    backgroundColor: shadeRGBColor($('.active').css('box-shadow').replace(/^.*(rgba?\([^)]+\)).*$/,'$1'), 0.1)
+                    backgroundColor: shadeRGBColor($('.active').css('box-shadow').replace(/^.*(rgba?\([^)]+\)).*$/, '$1'), 0.1)
                 });
-                $('.tooltip').show().animate({ 
-                    top : Number($('.tooltip').css('top').replace('px', '')) + 25, 
-                    opacity : '1'
+                $('.tooltip').show().animate({
+                    top: Number($('.tooltip').css('top').replace('px', '')) + 25,
+                    opacity: '1'
                 }, 200);
             }
-        }, 1200); 
+        }, 1500);
     });
-    $(document).on('mouseleave', '.tab', function(){
-        clearTimeout(tooltipTimer); 
+    $(document).on('mouseleave', '.tab', function() {
+        clearTimeout(tooltipTimer);
         $('.tooltip').animate({
-            top : Number($('.tooltip').css('top').replace('px', '')) - 25, 
-            opacity : '0'
-        }, 200, function(){
+            top: Number($('.tooltip').css('top').replace('px', '')) - 25,
+            opacity: '0'
+        }, 200, function() {
             $(this).hide();
         });
     });
+
     function openSaveBox(closed) {
         closeOverflow();
         var docTitle = $('.active .title').val();
@@ -758,14 +779,7 @@ $(document).ready(function() {
         fileDirs.splice(tabIndex, 1);
         closedTab.parent().remove();
         if (prefs === undefined) {
-            prefs = {
-                theme: 'material',
-                font: 'monospace',
-                fontSize: '14px',
-                tabSize: 4,
-                softWrap: true,
-                library: 'jquery.min.js'
-            };
+            resetPrefs();
         }
         if (tabIndex === 0 && tabLength == 1) {
             loadAutoTab();
@@ -818,7 +832,7 @@ $(document).ready(function() {
     });
 
     function openSearch() {
-        if (window.getSelection() == '') {
+        if (window.getSelection() === '') {
             $('.search-bar').select();
         } else {
             $('.search-bar').val(window.getSelection());
@@ -832,7 +846,6 @@ $(document).ready(function() {
             opacity: '1',
             bottom: '0px'
         }, 200);
-        refreshEditors();
         setTimeout(function() {
             $('.search-bar').focus();
         }, 200);
@@ -850,6 +863,9 @@ $(document).ready(function() {
             focusEditor();
         });
     }
+    $('.search-bar').keyup(function() {
+        $(this).css('box-shadow', 'inset 0px -1px 0px 0px rgba(255, 255, 255, 0.1)');
+    });
     $('.find_next').click(function() {
         text = $('.search-bar').val();
         cm = editor[$('.active').index()];
@@ -945,9 +961,10 @@ $(document).ready(function() {
     });
     //menu miscellaneous functionality
     function openOverflow() {
+        var height = $('.menu').children().length * 60 + 'px';
         $('.menu').show().stop().animate({
             opacity: '1',
-            height: '420px'
+            height: height
         }, 200);
     }
 
@@ -969,7 +986,12 @@ $(document).ready(function() {
         closeOverflow();
     });
     $(document).on('click', '.title', function(e) {
+        e.stopImmediatePropagation();
         e.stopPropagation();
+        if ($(this).attr('readonly') == 'readonly') {
+            e.preventDefault();
+            $(this).parent().click();
+        }
         closeOverflow();
     });
     //menu functionality
@@ -978,14 +1000,7 @@ $(document).ready(function() {
         var index = $('.active').index();
         editor[index] = CodeMirror.fromTextArea(document.getElementById('textarea' + Number($('.tabs').children().last().attr('id').replace('tab', ''))), config);
         if (prefs === undefined) {
-            prefs = {
-                theme: 'material',
-                font: 'monospace',
-                fontSize: '14px',
-                tabSize: 4,
-                softWrap: true,
-                library: 'jquery.min.js'
-            };
+            resetPrefs();
         }
         loadSettings(prefs);
         setTimeout(function() {
@@ -1026,14 +1041,7 @@ $(document).ready(function() {
                     autoSave(actIndex);
                     changeMode();
                     if (prefs === undefined) {
-                        prefs = {
-                            theme: 'material',
-                            font: 'monospace',
-                            fontSize: '14px',
-                            tabSize: 4,
-                            softWrap: true,
-                            library: 'jquery.min.js'
-                        };
+                        resetPrefs();
                     }
                     loadSettings(prefs);
                 };
@@ -1118,7 +1126,7 @@ $(document).ready(function() {
             type: 'openDirectory'
         }, function(dirEntry) {
             if (!dirEntry) {
-                var state = 'No Directory Chosen'
+                var state = 'No Directory Chosen';
                 setChosenDirInd(state);
             } else {
                 setChosenDirInd(dirEntry);
@@ -1371,7 +1379,7 @@ $(document).ready(function() {
         dirEntry.getMetadata(function(metadata) {
             var size = metadata.size,
                 time = Math.ceil(size);
-            if (Number.isFinite(time) == false) {
+            if (Number.isFinite(time) === false) {
                 time = 1000;
             }
             if (time > 20000) {
@@ -1408,7 +1416,7 @@ $(document).ready(function() {
                             }
                         });
                         if (i === rootDirs.length - 1) {
-                            if (isInRoot == true) {
+                            if (isInRoot === true) {
 
                             } else {
                                 rootDirs.push(chrome.fileSystem.retainEntry(dirEntry));
@@ -1417,7 +1425,7 @@ $(document).ready(function() {
                                 dirEntry.getMetadata(function(metadata) {
                                     var size = metadata.size,
                                         time = Math.ceil(size);
-                                    if (Number.isFinite(time) == false) {
+                                    if (Number.isFinite(time) === false) {
                                         time = 1000;
                                     }
                                     if (time > 20000) {
@@ -1440,10 +1448,11 @@ $(document).ready(function() {
             }
         });
     });
-    function setMaterialPadding(parent){
+
+    function setMaterialPadding(parent) {
         var thisMaterial = parent.find('.material-icons').first();
         var multiplier = parent.parentsUntil('.projects').length;
-        
+
         var padding = (20 * (multiplier / 2)) + 20 + 'px';
         thisMaterial.css('padding-left', padding);
     }
@@ -1453,7 +1462,7 @@ $(document).ready(function() {
             $(this).children('ul').velocity('slideUp', {
                 duration: 200,
                 complete: function() {
-                    $(this).hide()
+                    $(this).hide();
                 }
             });
             if ($(this).children().closest('.material-icons').text() == 'book') {
@@ -1463,7 +1472,7 @@ $(document).ready(function() {
             }
             $(this).css('color', 'rgba(255,255,255,0.8)');
         } else {
-            $(this).children('ul').children().each(function(index){
+            $(this).children('ul').children().each(function(index) {
                 setMaterialPadding($(this));
             });
             $(this).children('ul').show().velocity('slideDown', {
@@ -1494,7 +1503,7 @@ $(document).ready(function() {
             $('.file').removeClass('active-file');
             $('.file').css('box-shadow', 'none');
             $(this).addClass('active-file');
-            $('.active-file').css('box-shadow', 'inset 3px 0px 0px 0px ' + $('.active').css('box-shadow').replace(/^.*(rgba?\([^)]+\)).*$/,'$1'));
+            $('.active-file').css('box-shadow', 'inset 3px 0px 0px 0px ' + $('.active').css('box-shadow').replace(/^.*(rgba?\([^)]+\)).*$/, '$1'));
             var temp = [],
                 fileNames = [];
             var thisName = $(this).clone().children().remove().end().text();
@@ -1526,17 +1535,18 @@ $(document).ready(function() {
         if (top + fileHeight > $(window).height()) {
             top = top - fileHeight;
         }
-        $('.contextmenu').show().css({
+        $('.contextmenu').css({
+            top: top - 20 + 'px',
+            left: left - 20 + 'px'
+        }).show().stop().animate({
             top: top + 'px',
-            left: left - 20 + 'px',
-            backgroundColor: shadeRGBColor($('.sidebar').css('background-color'), -0.2)
-        }).stop().animate({
             opacity: '1'
         }, 200);
     }
 
     function contextMenuOff() {
         $('.contextmenu').stop().animate({
+            top: Number($('.contextmenu').css('top').replace('px', '')) - 20 + 'px',
             opacity: '0'
         }, 200, function() {
             $(this).hide();
@@ -1550,17 +1560,18 @@ $(document).ready(function() {
         if (top + folderHeight > $(window).height()) {
             top = top - folderHeight;
         }
-        $('.folder-contextmenu').show().css({
+        $('.folder-contextmenu').css({
+            top: top - 20 + 'px',
+            left: left - 20 + 'px'
+        }).show().stop().animate({
             top: top + 'px',
-            left: left - 20 + 'px',
-            backgroundColor: shadeRGBColor($('.sidebar').css('background-color'), -0.2)
-        }).stop().animate({
             opacity: '1'
         }, 200);
     }
 
     function folderContextOff() {
         $('.folder-contextmenu').stop().animate({
+            top: Number($('.folder-contextmenu').css('top').replace('px', '')) - 20 + 'px',
             opacity: '0'
         }, 200, function() {
             $(this).hide();
@@ -1722,9 +1733,9 @@ $(document).ready(function() {
     }
 
     function resetInput(input, value) {
-        $(input).css('box-shadow', '0px 1px 0px 0px #47bfa1');
+        $(input).css('box-shadow', 'inset 0px -1px 0px 0px #47bfa1');
         $(input).val(value);
-        if (value != '') {
+        if (value !== '') {
             $(input).select();
         } else {
             $(input).focus();
@@ -1743,7 +1754,7 @@ $(document).ready(function() {
         var extension = splitAndReturn(name, '.', 1);
         extension = '.' + extension.toLowerCase();
 
-        if (html == true) {
+        if (html === true) {
             if (images.indexOf(extension) > -1) {
                 material = '<div class="material-icons">photo</div>';
             } else if (sound.indexOf(extension) > -1) {
@@ -1853,7 +1864,7 @@ $(document).ready(function() {
     }
     $('.rename-folder-create').click(function() {
         var newFolderName = $('.rename-folder-input').val();
-        if (newFolderName == '') {
+        if (newFolderName === '') {
             newFolderName = folderContextMenuName;
         }
         var folderNames = [];
@@ -1869,17 +1880,17 @@ $(document).ready(function() {
             $('.rename-folder-input').css('box-shadow', '0px 1px 0px 0px #d61f1f');
             $('.rename-folder-input').focus();
         } else {
-            function getMatchingEntry(obj) {
+            getMatchingEntry = function(obj) {
                 var path = cleanPath(obj.entry);
                 if (obj.entry.name == folderContextMenuName && path == folderContextMenuPath) {
                     return obj;
                 }
-            }
+            };
 
-            function getIndex(element) {
+            getIndex = function(element) {
                 var path = cleanPath(element.entry);
                 return (element.entry.name == folderContextMenuName && path == folderContextMenuPath);
-            }
+            };
             var directory = directories.find(getMatchingEntry);
             directory = directory.entry;
             var directoryIndex = directories.findIndex(getIndex);
@@ -1889,7 +1900,7 @@ $(document).ready(function() {
                     nameForClass = replaceName(nameForClass);
                     directories[directoryIndex] = {
                         entry: newFolderEntry
-                    }
+                    };
                     var path = cleanPath(newFolderEntry);
                     folderToRemove.attr('class', nameForClass + ' folder');
                     folderToRemove.attr('path', path);
@@ -1916,9 +1927,9 @@ $(document).ready(function() {
                 var nameForClass = replaceName(newFileEntry.name);
                 var material = getMaterial(newFileEntry.name, false);
                 var path = cleanPath(newFileEntry);
-                if(fileToRemove.hasClass('active-file')){
+                if (fileToRemove.hasClass('active-file')) {
                     fileToRemove.attr('class', nameForClass + ' file active-file');
-                }else{
+                } else {
                     fileToRemove.attr('class', nameForClass + ' file');
                 }
                 fileToRemove.attr('path', path);
@@ -1948,7 +1959,7 @@ $(document).ready(function() {
             }
         }
         var oldName = files.find(getMatchingEntry).entry.name;
-        if (newName == '') {
+        if (newName === '') {
             newName = oldName;
         }
         var fileNames = [];
@@ -1969,12 +1980,12 @@ $(document).ready(function() {
             parentPath.splice(parentPath.length - 1, 1);
             parentPath = parentPath.join('/');
 
-            function getMatchingDirEntry(obj) {
+            getMatchingDirEntry = function(obj) {
                 var path = cleanPath(obj.entry);
                 if (obj.entry.name == parentName && path == parentPath) {
                     return obj;
                 }
-            }
+            };
             var projectDirEntry = directories.find(getMatchingDirEntry);
             projectDirEntry = projectDirEntry.entry;
             projectFileEntry = files.find(getMatchingEntry);
@@ -2007,7 +2018,7 @@ $(document).ready(function() {
         var projectChildren = $('.projects').children();
         var path = [];
         projectChildren.each(function() {
-            path.push($(this).attr('path'))
+            path.push($(this).attr('path'));
         });
         if (path.indexOf(folderContextMenuPath) > -1) {
             $('.folder-contextmenu .folder-rename').hide();
@@ -2041,7 +2052,7 @@ $(document).ready(function() {
             }
         }
         var oldName = files.find(getMatchingEntry).entry.name;
-        if (newName == '') {
+        if (newName === '') {
             newName = oldName;
         }
         var fileNames = [];
@@ -2074,7 +2085,7 @@ $(document).ready(function() {
             }
         }
         var oldName = directories.find(getMatchingEntry).entry.name;
-        if (newName == '') {
+        if (newName === '') {
             newName = oldName;
         }
         var folderNames = [];
@@ -2102,7 +2113,7 @@ $(document).ready(function() {
             if (obj.entry.name == folderContextMenuName && path == folderContextMenuPath) {
                 return obj;
             }
-        }
+        };
         var dirEntry = directories.find(getMatchingDirEntry);
         dirEntry = dirEntry.entry;
         removeChildDirectories(dirEntry);
@@ -2319,11 +2330,11 @@ $(document).ready(function() {
         if (!$(target).parents().is('.contextmenu') || !$(target).parents().is('.folder-contextmenu')) {
             contextMenuOff();
             folderContextOff();
-            clearTimeout(tooltipTimer); 
+            clearTimeout(tooltipTimer);
             $('.tooltip').animate({
-                top : Number($('.tooltip').css('top').replace('px', '')) - 25, 
-                opacity : '0'
-            }, 200, function(){
+                top: Number($('.tooltip').css('top').replace('px', '')) - 25,
+                opacity: '0'
+            }, 200, function() {
                 $(this).hide();
             });
         }
@@ -2478,7 +2489,6 @@ $(document).ready(function() {
         var width = $('.sidebar').width();
         calcWidth(width);
         resizeTabs();
-        refreshEditors();
 
         //fullscreen
         if (chrome.app.window.current().isFullscreen()) {
@@ -2536,10 +2546,10 @@ $(document).ready(function() {
     });
 
     function loadGettingStarted() {
-        $('.started-content').stop().animate({
+        $('.started-button').stop().animate({
             top: '50%',
             opacity: '1'
-        }, 800);
+        }, 400);
     }
     //save & load data or 'remember' tabs and settings
     function setData(textArray, tabArray, editArray, installed, activeIndex, sideWidth, projectSize, projectAmount) {
@@ -2624,6 +2634,18 @@ $(document).ready(function() {
         $('.search-container').width($(window).width() - sideBarWidth);
     }
 
+    function resetPrefs() {
+        prefs = {
+            theme: 'material',
+            font: 'monospace',
+            fontSize: '14px',
+            tabSize: 4,
+            softWrap: true,
+            library: 'jquery.min.js',
+            lint: false
+        };
+    }
+
     function loadData(launchData) {
         chrome.storage.local.get({
             data: 'textArray',
@@ -2649,7 +2671,7 @@ $(document).ready(function() {
             } else {
                 time = (Math.ceil(projectsize + dataSize) / projectamount * projectamount) / 5;
             }
-            if (Number.isFinite(time) == false) {
+            if (Number.isFinite(time) === false) {
                 time = 1000;
             }
             if (time > 15000) {
@@ -2659,14 +2681,7 @@ $(document).ready(function() {
                 time = 2000;
             }
             if (data == 'textArray' || tabs == 'tabArray' || state == 'editArray' || actv == 'activeIndex' || inst == 'installed' || sideBarWidth == 'sideWidth' || projectsize == 'projectSize' || projectamount == 'projectAmount') {
-                prefs = {
-                    theme: 'material',
-                    font: 'monospace',
-                    fontSize: '14px',
-                    tabSize: 4,
-                    softWrap: true,
-                    library: 'jquery.min.js'
-                };
+                resetPrefs();
                 loadAutoTab();
                 loadSettings(prefs);
                 calcWidth(250);
@@ -2718,7 +2733,7 @@ $(document).ready(function() {
                                     });
                                 });
                             }
-                            if (chosenDir != 'newProjectDir' && chosenDir != '') {
+                            if (chosenDir != 'newProjectDir' && chosenDir !== '') {
                                 chrome.fileSystem.isRestorable(chosenDir, function(isRestorable) {
                                     chrome.fileSystem.restoreEntry(chosenDir, function(entry) {
                                         setChosenDirInd(entry);
@@ -2745,6 +2760,8 @@ $(document).ready(function() {
                             $('.tab').eq(actv).click();
                             loadPrefs();
                             resizeTabs();
+                            refreshEditors();
+                            focusEditor();
                             preLoad();
                         }, time);
                     }
