@@ -1,4 +1,4 @@
-[<img src="https://dl2.pushbulletusercontent.com/9DkPdcZZ3YQa052ZFBk8FlI7mjrUmQfn/Untitled-3.png">](https://chrome.google.com/webstore/detail/quantum/hmnlklahndgbhdoclhdnoafhafbhmnkm)
+[<img src="https://dl2.pushbulletusercontent.com/q1AYW5ct2GYEeiv7DcxK6m0CfR2ra2fS/Untitled-3.png">](https://chrome.google.com/webstore/detail/quantum/hmnlklahndgbhdoclhdnoafhafbhmnkm)
 
 Quantum is a beautiful material design code editor based off of [atom](https://atom.io/) and [sublime text](https://www.sublimetext.com/). By extracting the most important features and adding our own spice, Quantum leaves behind the unnecessary clutter and provides you with a clean and rich code editing experience.
 
@@ -7,18 +7,20 @@ Quantum is a beautiful material design code editor based off of [atom](https://a
 Definitely one of the more prominent features available in Quantum is the ability to open and manipulate multiple projects. You can open as many projects as you like, but keep in mind there may be a difference in performance. Once opened, users can create a new folder or file within the project as well as remove it from the project or remove it permanently from their drive. 
 ### Tabs
 Quantum allows users to open, close, and sort as many tabs as they so desire. Users can also rename their documents by clicking on the title in the tab and using the keyboard to type in a different name.
+### Libraries
+<img src="https://dl2.pushbulletusercontent.com/y4OvqQhBtUNJWf6JA9Dgon5V0xZn3n8H/libraries.png">
+A unique feature to Quantum is the ability to add popular open-source libraries to the current folder directly from the settings panel. Simply select one and, assuming you have an internet connection, Quantum will get the file from the cdnjs.com.
 ### Search
+<img src="https://dl2.pushbulletusercontent.com/AUgbhemQdWUQowndx4a7UNflvoRbdAT9/screenshot-5.png">
 Full search and replace is already built-in to Quantum out of the box. Type in your search and Quantum scrolls to the first found text that matches your search or highlights your search red if no match has been found. Users can replace text one by one or all at once.
-### Syntax Highlighting
-Currently, Quantum supports syntax for all languages listed on the [CodeMirror site](http://codemirror.net/mode/).
-### Tidy Up
-It's what we all fear the most in this world as developers; _messy code_. Luckily with Quantum, users can easily clean up their code with the "tidy up" button in the menu.
 ### Settings
+<img src="https://dl2.pushbulletusercontent.com/zAyXymocFH4Lpts56izjZ8uweJehJno7/screenshot-3.png">
 The settings modal provides 5 key customization options: Themes, Font, Font Size, Tab Size, and Soft Wrap. I wont list all their respective options here as to save space, but they are pretty self-explanatory. These settings were chosen to add a tweakability aspect to Quantum while still incorporating this idea of simplicity that we eagerly strive for.
 
 A more detailed description of the themes and fonts available in Quantum are listed below:
 
 #### Themes
+<img src="https://dl2.pushbulletusercontent.com/bpQyDTkHhJRaDnLYze5mMrhZvDOUmv6h/themes.png">
 As with any editor, themes are a crucial part of a user's experience, so when designing Quantum, this was taken into account. Quantum comes with 8 distinctive themes that are sure to appeal to a number of users.
 - Birds of Paradise
 - Darkpastel
@@ -48,10 +50,16 @@ Quantum has all your favorite fonts.
 - <code>CTRL + S</code> Save File
 - <code>CTRL + SHIFT + S</code> Save As
 - <code>CTRL + W</code> Close Tab
-- <code>CTRL + P</code> Open Preferences
+- <code>CTRL + P</code> Toggle Preferences
+- <code>CTRL + /</code> Toggle Sidebar
+- <code>AlT + Q</code> Toggle Wrap
 
 As for the editor itself, all key bindings are CodeMirror's default.
 
+### Syntax Highlighting
+Currently, Quantum supports syntax for all languages listed on the [CodeMirror site](http://codemirror.net/mode/).
+### Tidy Up
+It's what we all fear the most in this world as developers; _messy code_. Luckily with Quantum, users can easily clean up their code with the "tidy up" button in the menu.
 
 ## Installing
 The installation process depends on the operating system you're in. 
