@@ -34,7 +34,6 @@
 .cm-s-zenburnesque span.cm-link { color: #815ba4; }
 .cm-s-zenburnesque span.cm-error { background: #ef6155; color: #8d8687; }
 
-.cm-s-zenburnesque .CodeMirror-activeline-background { background: #4D344A; }
 .cm-s-zenburnesque .CodeMirror-matchingbracket { text-decoration: underline; color: white !important; }
 
 .active-zenburnesque { box-shadow: inset 0px -2px 0px 0px #c149ba ; opacity: 1 !important;}

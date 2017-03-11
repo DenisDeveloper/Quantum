@@ -76,8 +76,7 @@
     border:none;
 }
 .cm-s-mono-industrial .CodeMirror-linenumber {
-    color: #e6e6e6;
-    opacity: 0.6;
+    color: rgba(255,255,255,0.6);
 }
 .active-mono-industrial { box-shadow: inset 0px -2px 0px 0px #d62a33 ; opacity: 1 !important;}
 .active-mono-industrial .material-icons { color: #d62a33; }

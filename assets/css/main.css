@@ -18,7 +18,7 @@ body {
     border-radius: 2px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
     cursor: default;
-    opacity:0;
+    opacity: 0;
 }
 
 .contextmenu div:not(.material-icons) {
@@ -41,7 +41,7 @@ body {
     border-radius: 2px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
     cursor: default;
-    opacity:0;
+    opacity: 0;
 }
 
 .folder-contextmenu div:not(.material-icons) {
@@ -71,8 +71,8 @@ body {
     background-color: #37e0b7;
     background-image: url('../imgs/background.jpg');
     background-repeat: no-repeat;
-    background-size:cover;
-    background-position:center;
+    background-size: cover;
+    background-position: center;
 }
 
 .getting-started .started-button {
@@ -81,8 +81,8 @@ body {
     top: 55%;
     left: 50%;
     position: absolute;
-    margin-top:-25px;
-    margin-left:-130px;
+    margin-top: -25px;
+    margin-left: -130px;
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
     border-radius: 2px;
     background-color: #f5a14b;
@@ -90,7 +90,7 @@ body {
     text-align: center;
     font-family: 'Roboto';
     font-size: 16px;
-    opacity:0;
+    opacity: 0;
 }
 
 .preload {
@@ -314,37 +314,41 @@ body {
     color: rgba(255, 255, 255, 0.6);
 }
 
-.settings-container .settings .settingdiv .checkbox{
-    float:right;
-    margin-top:-35px;
-    position:relative;
-    height:20px;
-    width:20px;
-    clear:both;
-    text-align:center;
-    line-height:20px;
-    border-radius:2px;
-    border:2px solid rgba(255,255,255,0.7);
-    transition:all .2s ease-out;
-}
-.settings-container .settings .settingdiv .checkbox .material-icons{
-	margin-left:-1px;
-    font-size:20px;
+.settings-container .settings .settingdiv .checkbox {
+    float: right;
+    margin-top: -35px;
+    position: relative;
+    height: 20px;
+    width: 20px;
+    clear: both;
+    text-align: center;
+    line-height: 20px;
+    border-radius: 2px;
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    transition: all .2s ease-out;
 }
 
-.settings-container .settings .settingdiv .checkbox-description *{
-    display:inline-block;
+.settings-container .settings .settingdiv .checkbox .material-icons {
+    margin-left: -1px;
+    font-size: 20px;
 }
-.settings-container .settings .settingdiv .checkbox-description .text{
-   	width:86%;
-    float:left;
+
+.settings-container .settings .settingdiv .checkbox-description * {
+    display: inline-block;
 }
-.active-checkbox{
-    background-color:#FFF;
-    border-color:#FFF;
-    color:#000;
-    transition:all .2s ease-out;
+
+.settings-container .settings .settingdiv .checkbox-description .text {
+    width: 86%;
+    float: left;
 }
+
+.active-checkbox {
+    background-color: #FFF;
+    border-color: #FFF;
+    color: #000;
+    transition: all .2s ease-out;
+}
+
 .settings-container .settings .settingdiv span {
     margin-top: 10px;
     color: #e6644d;
@@ -428,32 +432,48 @@ body {
     height: calc(100% - 50px);
     overflow-x: hidden;
     font-size: 12px;
-    font-family: 'Roboto';
+    font-family: 'Roboto Med';
 }
 
 .sidebar .projects .folder,
 .sidebar .projects .file {
-    height: 50px;
-    line-height: 50px;
+    height: 40px;
+    line-height: 40px;
     color: rgba(255, 255, 255, 0.8);
     white-space: nowrap;
     cursor: default;
     display: block;
     width: 100%;
     clear: both;
-    transition: all .2s ease-out;
 }
 
-.sidebar .projects .active-file {
-    background-color: rgba(255, 255, 255, 0.03);
+.sidebar .projects .active-file, .active-folder {
+    background-color: rgba(255, 255, 255, 0.05);
     color: rgba(255, 255, 255, 1);
 }
 
+.sidebar .projects .folder .material-icons,
+.file-name,
+.folder-name {
+    display: inline-block;
+    vertical-align: top;
+    height: 40px;
+}
+
 .sidebar .projects .folder .material-icons {
-    float: left;
     padding-left: 20px;
-    padding-right: 20px;
-    clear: both;
+    padding-right: 5px;
+    font-size: 18px;
+}
+
+.sidebar .projects .file .material-icons {
+    padding-right: 10px;
+    font-size: 18px;
+}
+
+.sidebar .projects .folder .material-icons:nth-child(2) {
+    padding-left: 0px;
+    padding-right: 10px;
 }
 
 .sidebar .projects .folder ul {
@@ -493,6 +513,7 @@ body {
     position: absolute;
     margin-top: 30px;
     background-color: #263238;
+    border-left: 1px solid rgba(0, 0, 0, 0.5);
     margin-right: 70px;
     overflow: hidden;
     white-space: nowrap;
@@ -598,6 +619,7 @@ body {
     position: absolute;
     margin-top: 80px;
     background-color: #263238;
+    border-left: 1px solid rgba(0, 0, 0, 0.5);
     z-index: 100;
 }
 
@@ -742,6 +764,9 @@ body {
     z-index: 100;
     background-color: inherit;
     z-index: 200;
+    border-left: 1px solid rgba(0, 0, 0, 0.5);
+    border-top: 1px solid rgba(0, 0, 0, 0.2);
+    box-shadow:0px -6px 8px 0px rgba(0,0,0,0.1);
 }
 
 .search-container .searchbars {
@@ -775,7 +800,7 @@ body {
 }
 
 .search-container .searchbars input:first-child {
-    box-shadow: inset 0px -1px 0px 0px rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0px -1px 0px 0px rgba(0, 0, 0, 0.2);
 }
 
 .search-container .buttons div,
@@ -895,12 +920,24 @@ body {
 
 .CodeMirror {
     height: 100%;
-    font-size: 14px;
+    font-size: 16px;
     line-height: 1.3em !important;
 }
-
-.CodeMirror pre > * {
+.CodeMirror-activeline-background{
+    background:rgba(255,255,255, 0.03) !important;
+}
+.CodeMirror-linenumber{
+    color:rgba(255,255,255,0.4) !important;
+}
+.CodeMirror-activeline-gutter > .CodeMirror-gutter-elt{
+    color: rgba(255,255,255, 0.8) !important;
+}
+.CodeMirror pre>* {
     text-indent: 0px;
+}
+
+.windowBar {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.5);
 }
 
 .material-icons {

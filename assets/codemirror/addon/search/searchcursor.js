@@ -75,7 +75,7 @@
               var match = line.lastIndexOf(query);
               if (match > -1) {
                 match = adjustPos(orig, line, match);
-                $('.search-bar').css('box-shadow', 'inset 0px -1px 0px 0px rgba(255, 255, 255, 0.1)');  
+                $('.search-bar').css('box-shadow', 'inset 0px -1px 0px 0px rgba(0, 0, 0, 0.2)');  
                 return {from: Pos(pos.line, match), to: Pos(pos.line, match + origQuery.length)};
               }else{
                 $('.search-bar').css('box-shadow', 'rgba(251, 19, 19, 0.63) 0px -1px 0px 0px inset');
@@ -85,7 +85,7 @@
                var match = line.indexOf(query);
                if (match > -1) {
                  match = adjustPos(orig, line, match) + pos.ch;
-                 $('.search-bar').css('box-shadow', 'inset 0px -1px 0px 0px rgba(255, 255, 255, 0.1)');  
+                 $('.search-bar').css('box-shadow', 'inset 0px -1px 0px 0px rgba(0, 0, 0, 0.2)');  
                  return {from: Pos(pos.line, match), to: Pos(pos.line, match + origQuery.length)};
                }else{
             		$('.search-bar').css('box-shadow', 'rgba(251, 19, 19, 0.63) 0px -1px 0px 0px inset');

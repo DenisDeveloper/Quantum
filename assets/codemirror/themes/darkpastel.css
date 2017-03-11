@@ -21,7 +21,6 @@
 .cm-s-darkpastel span.cm-link {color: #c85e7c;}
 
 .cm-s-darkpastel .CodeMirror-matchingbracket { text-decoration: underline; color: white !important;}
-.cm-s-darkpastel .CodeMirror-activeline-background { background: #302020; }
 
 .active-darkpastel { box-shadow: inset 0px -2px 0px 0px #ef5d32 ; opacity: 1 !important;}
 .active-darkpastel .material-icons { color: #ef5d32; }

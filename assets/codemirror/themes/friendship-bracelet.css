@@ -21,9 +21,6 @@
 .cm-s-friendship-bracelet div.CodeMirror-cursor {
 	border-left: 3px solid #32d5ef;
 }
-.cm-s-friendship-bracelet .CodeMirror-activeline-background {
-	background: #404040;
-}
 .cm-s-friendship-bracelet .CodeMirror-selected {
 	background: #73597EE0;
 }

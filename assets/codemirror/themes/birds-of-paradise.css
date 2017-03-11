@@ -18,9 +18,6 @@
 .cm-s-birds-of-paradise div.CodeMirror-cursor {
 	border-left: 3px solid #E6E1C4;
 }
-.cm-s-birds-of-paradise .CodeMirror-activeline-background {
-	background: #281C1C66;
-}
 .cm-s-birds-of-paradise .CodeMirror-selected {
 	background: #1E1C1C;
 }
