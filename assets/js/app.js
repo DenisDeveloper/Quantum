@@ -1,4 +1,4 @@
-//Quantum v4.7
+//Quantum v4.8
 //Author: Carlos E. Santos
 $(document).ready(function() {
     function preLoad() {
@@ -201,11 +201,11 @@ $(document).ready(function() {
         }
         $('.selector-library').html(prefs.library + '<div class="material-icons">arrow_drop_down</div>');
 
-        if (prefs.styleActiveLine === false) {} else {
+        if (prefs.styleActiveLine === false || undefined) {} else {
             $('.activeline-checkbox').addClass('active-checkbox');
             $('.activeline-checkbox').find('.material-icons').text('check');
         }
-        if (prefs.lint === false) {} else {
+        if (prefs.lint === false || undefined) {} else {
             $('.linter-checkbox').addClass('active-checkbox');
             $('.linter-checkbox').find('.material-icons').text('check');
         }
@@ -373,7 +373,7 @@ $(document).ready(function() {
                 create: true,
                 exclusive: true
             }, function(fileEntry) {
-                //write data to file  
+                //write data to file
                 fileEntry.createWriter(function(fileWriter) {
                     var blob = new Blob([data]);
                     fileWriter.write(blob);
@@ -693,7 +693,11 @@ $(document).ready(function() {
             path = tab.attr('path');
 
         var fileName = $(this).val();
-        var entry = getEntry(fileName, path, true, false, false);
+        if(path === undefined || ''){
+
+        }else{
+          var entry = getEntry(fileName, path, true, false, false);
+        }
         if (entry === undefined) {
             entry = getEntry(fileName, path, false, false, true, true);
             if (entry === undefined) {
@@ -962,7 +966,7 @@ $(document).ready(function() {
                 openSearch();
             }
         }
-        //close current tab 
+        //close current tab
         if (e.ctrlKey && e.keyCode == 87 || e.metaKey && e.keyCode == 87) {
             e.preventDefault();
             $('.active .close').click();
@@ -1154,9 +1158,7 @@ $(document).ready(function() {
     }
     $('.add-newproject').click(function() {
         openProjectDialog();
-        $('.new-project-dialogue input').css('box-shadow', '0px 1px 0px 0px #47bfa1');
-        $('.new-project-dialogue input').val('');
-        $('.new-project-dialogue input').focus();
+        resetInput('.new-project-input', '')
     });
     $('.new-project-cancel').click(function() {
         closeProjectDialog();
@@ -1201,31 +1203,21 @@ $(document).ready(function() {
             create: true,
             exclusive: true
         }, function(dirEntry) {
-            dirEntry.getFile('temp.txt', {
-                create: true,
-                exclusive: true
-            }, function(entry) {
-                entry.getParent(function(parent) {
-                    rootDirs.push(chrome.fileSystem.retainEntry(parent));
-                    directories.push({
-                        entry: parent
-                    });
-                    var path = cleanPath(parent);
-                    var div = document.createElement('div');
-                    var thisName = parent.name;
-                    thisName = replaceName(thisName);
-                    div.className = thisName + ' folder';
-                    div.setAttribute('path', path);
-                    div.innerHTML = '<div class="material-icons">book</div>' + parent.name + '<ul class="' + thisName + 'ul"></ul>';
-                    $('.projects').append(div);
-                    $('.projects').children().last().children().last().hide();
-                    closeProjectDialog();
-                    focusEditor();
-                    entry.remove(function() {
-                        console.log('success!');
-                    });
-                });
+            rootDirs.push(chrome.fileSystem.retainEntry(dirEntry));
+            directories.push({
+                entry: dirEntry
             });
+            var path = cleanPath(dirEntry);
+            var div = document.createElement('div');
+            var thisName = dirEntry.name;
+            thisName = replaceName(thisName);
+            div.className = thisName + ' folder';
+            div.setAttribute('path', path);
+            div.innerHTML = '<div class="material-icons">keyboard_arrow_right</div><div class="material-icons">book</div>' + '<label class="folder-name">' + dirEntry.name + '</label>' + '<ul class="' + thisName + 'ul"></ul>';
+            $('.projects').append(div);
+            $('.projects').children().last().children().last().hide();
+            closeProjectDialog();
+            focusEditor();
         });
     });
     $(document).on('keyup', '.dialog-input:not(.rename-file-input, .rename-folder-input)', function(e) {
@@ -1247,9 +1239,9 @@ $(document).ready(function() {
             });
         }
         if (folderNames.indexOf(folderName) > -1) {
-            $(this).css('box-shadow', '0px 1px 0px 0px #d61f1f ');
+            $(this).css('box-shadow', 'inset 0px -1px 0px 0px #d61f1f ');
         } else {
-            $(this).css('box-shadow', '0px 1px 0px 0px #47bfa1');
+            $(this).css('box-shadow', 'inset 0px -1px 0px 0px #47bfa1');
         }
     });
 
@@ -1546,6 +1538,7 @@ $(document).ready(function() {
         var entry;
         var getMatchingEntry = function(obj) {
             var objPath = cleanPath(obj.entry);
+            console.log(path, objPath);
             if (obj.entry.name == name && path == objPath) {
                 return obj;
             }
@@ -1956,7 +1949,7 @@ $(document).ready(function() {
             }
         });
         if (folderNames.indexOf(newFolderName) > -1) {
-            $('.rename-folder-input').css('box-shadow', '0px 1px 0px 0px #d61f1f');
+            $('.rename-folder-input').css('box-shadow', 'inset 0px -1px 0px 0px #d61f1f');
             $('.rename-folder-input').focus();
         } else {
             var getIndex = function(element) {
@@ -2043,7 +2036,7 @@ $(document).ready(function() {
             }
         });
         if (fileNames.indexOf(newName) > -1) {
-            $(this).parent().parent().find('input').css('box-shadow', '0px 1px 0px 0px #d61f1f ');
+            $(this).parent().parent().find('input').css('box-shadow', 'inset 0px -1px 0px 0px #d61f1f ');
             $('.rename-file-input').focus();
         } else {
             var parentName = splitAndReturn(contextMenuPath, '/', 2),
@@ -2122,9 +2115,9 @@ $(document).ready(function() {
             }
         });
         if (fileNames.indexOf(newName) > -1) {
-            $(this).css('box-shadow', '0px 1px 0px 0px #d61f1f ');
+            $(this).css('box-shadow', 'inset 0px -1px 0px 0px #d61f1f ');
         } else {
-            $(this).css('box-shadow', '0px 1px 0px 0px #47bfa1');
+            $(this).css('box-shadow', 'inset 0px -1px 0px 0px #47bfa1');
 
         }
         if (e.keyCode == 13) {
@@ -2148,9 +2141,9 @@ $(document).ready(function() {
             }
         });
         if (folderNames.indexOf(newName) > -1) {
-            $(this).css('box-shadow', '0px 1px 0px 0px #d61f1f ');
+            $(this).css('box-shadow', 'inset 0px -1px 0px 0px #d61f1f ');
         } else {
-            $(this).css('box-shadow', '0px 1px 0px 0px #47bfa1');
+            $(this).css('box-shadow', 'inset 0px -1px 0px 0px #47bfa1');
 
         }
         if (e.keyCode == 13) {
@@ -2194,7 +2187,7 @@ $(document).ready(function() {
             folderNames.push($(this).find('.folder-name').first().text());
         });
         if (folderNames.indexOf(folderName) > -1) {
-            $('.new-folder-input').css('box-shadow', '0px 1px 0px 0px #d61f1f ');
+            $('.new-folder-input').css('box-shadow', 'inset 0px -1px 0px 0px #d61f1f ');
             $('.new-folder-input').focus();
         } else {
             var dirEntry = getEntry(folderContextMenuName, folderContextMenuPath, false, true);
@@ -2280,9 +2273,10 @@ $(document).ready(function() {
             fileNames.push($(this).find('.file-name').first().text());
         });
         if (fileNames.indexOf(fileName) > -1) {
-            $('.new-file-input').css('box-shadow', '0px 1px 0px 0px #d61f1f');
+            $('.new-file-input').css('box-shadow', 'inset 0px -1px 0px 0px #d61f1f');
             $('.new-file-input').focus();
         } else {
+            console.log(folderContextMenuName);
             var dirEntry = getEntry(folderContextMenuName, folderContextMenuPath, false, true);
             dirEntry.getFile(fileName, {
                 create: true,
@@ -2472,7 +2466,7 @@ $(document).ready(function() {
             }
         }
     });
-	
+
     //change modes automatically
     //based on file name
     function changeMode() {

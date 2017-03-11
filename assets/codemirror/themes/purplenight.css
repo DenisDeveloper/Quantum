@@ -1,10 +1,10 @@
 .cm-s-purplenight.CodeMirror {
-  background-color: #25252d;
+  background-color: #282c34;
   color: rgba(233, 237, 237, 1);
   height:100%;
 }
 .cm-s-purplenight .CodeMirror-gutters {
-  background: #25252d;
+  background: #282c34;
   color: rgb(83,127,126);
   border: none;
 }
