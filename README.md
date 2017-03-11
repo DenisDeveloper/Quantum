@@ -28,7 +28,7 @@ As with any editor, themes are a crucial part of a user's experience, so when de
 - Material (default)
 - Monokai Sublime
 - Purplenight
-- Tomorrow Night Bright
+- Mono Industrial
 - Zenburnesque
 
 These themes were hand-picked from [this](https://github.com/FarhadG/code-mirror-themes) lovely repository and modified to fit Quantum perfectly. Many thanks to [FarhadG](https://github.com/FarhadG) for providing this!
