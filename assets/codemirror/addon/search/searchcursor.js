@@ -52,10 +52,17 @@
           var start = match && match.index;
           if (start + matchLen != line.length && !matchLen) matchLen = 1;
         }
-        if (match && matchLen)
-          return {from: Pos(pos.line, start),
-                  to: Pos(pos.line, start + matchLen),
-                  match: match};
+        if (match && matchLen){
+          if($('.search-bar').attr('searchNext') == 'true'){
+            return {from: Pos(pos.line, start),
+                    to: Pos(pos.line, start + matchLen),
+                    match: match};
+          }else{
+            return {from: Pos(pos.line, start),
+                    to: Pos(pos.line, start),
+                    match: match};
+          }
+        }
       };
     } else { // String query
       var origQuery = query;
@@ -75,8 +82,12 @@
               var match = line.lastIndexOf(query);
               if (match > -1) {
                 match = adjustPos(orig, line, match);
-                $('.search-bar').css('box-shadow', 'inset 0px -1px 0px 0px rgba(0, 0, 0, 0.2)');  
-                return {from: Pos(pos.line, match), to: Pos(pos.line, match + origQuery.length)};
+                $('.search-bar').css('box-shadow', 'inset 0px -1px 0px 0px rgba(0, 0, 0, 0.2)');
+                if($('.search-bar').attr('searchNext') == 'true'){
+                  return {from: Pos(pos.line, match), to: Pos(pos.line, match + origQuery.length)};
+                }else{
+                  return {from: Pos(pos.line, match), to: Pos(pos.line, match)};
+                }
               }else{
                 $('.search-bar').css('box-shadow', 'rgba(251, 19, 19, 0.63) 0px -1px 0px 0px inset');
               }
@@ -85,11 +96,14 @@
                var match = line.indexOf(query);
                if (match > -1) {
                  match = adjustPos(orig, line, match) + pos.ch;
-                 $('.search-bar').css('box-shadow', 'inset 0px -1px 0px 0px rgba(0, 0, 0, 0.2)');  
-                 return {from: Pos(pos.line, match), to: Pos(pos.line, match + origQuery.length)};
+                 $('.search-bar').css('box-shadow', 'inset 0px -1px 0px 0px rgba(0, 0, 0, 0.2)');
+                 if($('.search-bar').attr('searchNext') == 'true'){
+                   return {from: Pos(pos.line, match), to: Pos(pos.line, match + origQuery.length)};
+                 }else{
+                   return {from: Pos(pos.line, match), to: Pos(pos.line, match)};
+                 }
                }else{
             		$('.search-bar').css('box-shadow', 'rgba(251, 19, 19, 0.63) 0px -1px 0px 0px inset');
-                   
                }
             }
           };

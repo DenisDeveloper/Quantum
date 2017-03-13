@@ -48,7 +48,7 @@
 	color: #EF5D32;
 }
 .cm-s-birds-of-paradise .CodeMirror-linenumber {
-	color: italic;
+	color: #80635f;
 }
 .active-birds-of-paradise { box-shadow: inset 0px -2px 0px 0px #E6E1C4 ; opacity: 1 !important;}
 .active-birds-of-paradise .material-icons { color: #E6E1C4; }

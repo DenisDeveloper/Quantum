@@ -1,17 +1,6 @@
-//Quantum v4.8
+//Quantum v4.9
 //Author: Carlos E. Santos
 $(document).ready(function() {
-    function preLoad() {
-        $('.preload').stop().velocity({
-            opacity: '0'
-        }, {
-            duration: 800,
-            complete: function() {
-                $(this).hide();
-            }
-        });
-        $('body').removeClass('preload-body');
-    }
     var loadTexts = ["Please wait...a few bits tried to escape, but we caught them",
         "Please wait...and dream of faster computers",
         "Please wait...would you like fries with that?",
@@ -53,11 +42,13 @@ $(document).ready(function() {
         installed,
         docFrag;
 
+    //search variables
     var text,
         query,
         cm,
         state;
 
+    //defaults
     var config = {
         lineNumbers: true,
         lineWrapping: true,
@@ -77,9 +68,115 @@ $(document).ready(function() {
         mode: 'text/plain'
     };
 
-    function focusEditor() {
-        editor[$('.active').index()].focus();
+    function getActiveTab() {
+        return $('.active');
     }
+
+    function isInteger(x) {
+        return x % 1 === 0;
+    }
+
+    function getEditor(index) {
+        if (isInteger(index)) {
+            return editor[index];
+        } else {
+            return editor[getActiveTab().index()];
+        }
+    }
+
+    function setEditor(index, value) {
+        editor[index] = value;
+    }
+
+    function focusEditor() {
+        getEditor().focus();
+    }
+
+    function setStorage(obj) {
+        chrome.storage.local.set(obj);
+    }
+
+    function getStorage(obj, callback) {
+        chrome.storage.local.get(obj, callback);
+    }
+
+    function replaceTabID(tab) {
+        return tab.attr('id').replace('tab', '');
+    }
+
+    function getMatIcons(parent) {
+        return parent.find('.material-icons');
+    }
+
+    function getFolderName(parent) {
+        return parent.find('.folder-name').first().text();
+    }
+
+    function setFolderName(parent, text) {
+        parent.find('.folder-name').first().text(text);
+    }
+
+    function getFileName(parent) {
+        return parent.find('.file-name').text();
+    }
+
+    function setFileName(parent, text) {
+        parent.find('.file-name').text(text);
+    }
+
+    String.prototype.capitalizeFirstLetter = function() {
+        return this.charAt(0).toUpperCase() + this.slice(1);
+    };
+
+    //common aliases
+    function codeMirror() {
+        return $('.CodeMirror');
+    }
+
+    function sideBar() {
+        return $('.sidebar');
+    }
+
+    function workSpace() {
+        return $('.workspace');
+    }
+
+    function projects() {
+        return $('.projects');
+    }
+
+    function settings() {
+        return $('.settings-container');
+    }
+
+    function tabContainer() {
+        return $('.tabs');
+    }
+
+    function tab(index) {
+        if (isInteger(index)) {
+            return $('.tab').eq(index);
+        } else {
+            return $('.tab');
+        }
+    }
+
+    function bg() {
+        return $('.bg');
+    }
+
+    function preLoad() {
+        $('.preload').stop().velocity({
+            opacity: '0'
+        }, {
+            duration: 800,
+            complete: function() {
+                $(this).hide();
+            }
+        });
+        $('body').removeClass('preload-body');
+    }
+
     //settings
     //dropdown
     function openDropDown(dropdown) {
@@ -101,19 +198,22 @@ $(document).ready(function() {
         var thisDropdown = $(this).attr('class').split(' ');
         thisDropdown = thisDropdown[thisDropdown.length - 1];
         var realDropdown = thisDropdown.replace('selector-', '');
-        openDropDown($('.dropdown-' + realDropdown));
+        realDropdown = $('.dropdown-' + realDropdown);
 
+        openDropDown(realDropdown);
+
+        var arrows = getMatIcons($(this));
         //change material-icon
-        if ($(this).find('.material-icons').text() == 'arrow_drop_down') {
-            $(this).find('.material-icons').text('arrow_drop_up');
+        if (arrows.text() == 'arrow_drop_down') {
+            arrows.text('arrow_drop_up');
         } else {
-            $(this).find('.material-icons').text('arrow_drop_down');
+            arrows.text('arrow_drop_down');
         }
     });
 
     function savePrefs() {
-        var font = $('.CodeMirror').css('font-family'),
-            fontSize = $('.CodeMirror').css('font-size'),
+        var font = codeMirror().css('font-family'),
+            fontSize = codeMirror().css('font-size'),
             library = $('.selector-library').clone().children().remove().end().text();
         var lint,
             styleAL;
@@ -137,14 +237,14 @@ $(document).ready(function() {
             lint: lint,
             styleActiveLine: styleAL
         };
-        chrome.storage.local.set({
+        setStorage({
             settings: prefs
         });
     }
 
     function refreshEditors() {
         for (var re = 0; re < editor.length; re++) {
-            editor[re].refresh();
+            getEditor(re).refresh();
         }
     }
 
@@ -159,60 +259,95 @@ $(document).ready(function() {
     }
 
     function loadColor(color) {
-        $('.sidebar').css('background-color', shadeRGBColor(color, -0.2));
+        sideBar().css('background-color', shadeRGBColor(color, -0.2));
         $('.workspace, body').css('background-color', color);
         $('.windowBar').css('background-color', shadeRGBColor(color, 0.1));
-        $('.settings-container').css('background-color', shadeRGBColor(color, -0.1));
+        settings().css('background-color', shadeRGBColor(color, -0.1));
     }
 
-    function loadSettings(prefs) {
-        $('.CodeMirror').css('font-family', prefs.font);
-        $('.CodeMirror').css('font-size', prefs.fontSize);
-        setEditorOption('theme', prefs.theme);
-        setEditorOption('tabSize', prefs.tabSize);
-        setEditorOption('lineWrapping', prefs.softWrap);
-        setEditorOption('lint', prefs.lint);
-        setEditorOption('styleActiveLine', prefs.styleActiveLine);
-        $('.active').attr('class', 'tab active active-' + prefs.theme);
-        var color = $('.CodeMirror').css('background-color');
-        loadColor(color);
+    function resetConfig(prefs) {
         config.theme = prefs.theme;
         config.tabSize = prefs.tabSize;
         config.indentUnit = prefs.tabSize;
         config.lineWrapping = prefs.softWrap;
         config.lint = prefs.lint;
         config.styleActiveLine = prefs.styleActiveLine;
-        changeTabTheme(color);
+    }
+
+    function loadSettings(prefs) {
+        codeMirror().css('font-family', prefs.font);
+        codeMirror().css('font-size', prefs.fontSize);
+        setEditorOption([{
+                option: 'theme',
+                value: prefs.theme
+            },
+            {
+                option: 'tabSize',
+                value: prefs.tabSize
+            },
+            {
+                option: 'lineWrapping',
+                value: prefs.softWrap
+            },
+            {
+                option: 'lint',
+                value: prefs.lint
+            },
+            {
+                option: 'styleActiveLine',
+                value: prefs.styleActiveLine
+            }
+        ]);
+        getActiveTab().attr('class', 'tab active active-' + prefs.theme);
+        loadColor(getCMColor());
+        resetConfig(prefs);
+        changeTabTheme(getCMColor());
         refreshEditors();
     }
 
-    function setSelectors(prefs) {
-        $('.selector-theme').html(prefs.theme.replace(/-/g, ' ') + '<div class="material-icons">arrow_drop_down</div>');
-        $('.selector-font').html(prefs.font.replace(/"/g, '').toLowerCase() + '<div class="material-icons">arrow_drop_down</div>');
-        $('.selector-font-size').html(prefs.fontSize + '<div class="material-icons">arrow_drop_down</div>');
-        $('.selector-tab-size').html(prefs.tabSize + '<div class="material-icons">arrow_drop_down</div>');
-        if (prefs.softWrap === true) {
-            $('.selector-wrap').html('wrap' + '<div class="material-icons">arrow_drop_down</div>');
-        } else {
-            $('.selector-wrap').html('none' + '<div class="material-icons">arrow_drop_down</div>');
-        }
-        if (prefs.library === undefined) {
-            prefs.library = 'jquery.min.js';
-        }
-        $('.selector-library').html(prefs.library + '<div class="material-icons">arrow_drop_down</div>');
+    function nameSelector(selector, name) {
+        $(selector).html(name + '<div class="material-icons">arrow_drop_down</div>');
+    }
 
-        if (prefs.styleActiveLine === false || undefined) {} else {
-            $('.activeline-checkbox').addClass('active-checkbox');
-            $('.activeline-checkbox').find('.material-icons').text('check');
-        }
-        if (prefs.lint === false || undefined) {} else {
-            $('.linter-checkbox').addClass('active-checkbox');
-            $('.linter-checkbox').find('.material-icons').text('check');
+    function parseWrap(wrap) {
+        if (wrap === true) {
+            return 'wrap';
+        } else {
+            return 'none';
         }
     }
 
+    function parseLib(lib) {
+        if (lib === undefined) {
+            return '.jquery.min.js';
+        } else {
+            return lib;
+        }
+    }
+
+    function setCheckBox(value, checkbox) {
+        if (value === false || undefined) {
+            $(checkbox).removeClass('active-checkbox');
+            getMatIcons($(checkbox)).text('');
+        } else {
+            $(checkbox).addClass('active-checkbox');
+            getMatIcons($(checkbox)).text('check');
+        }
+    }
+
+    function setSelectors(prefs) {
+        nameSelector('.selector-theme', prefs.theme.replace(/-/g, ' '));
+        nameSelector('.selector-font', prefs.font.replace(/"/g, '').toLowerCase());
+        nameSelector('.selector-font-size', prefs.fontSize);
+        nameSelector('.selector-tab-size', prefs.tabSize);
+        nameSelector('.selector-wrap', parseWrap(prefs.softWrap));
+        nameSelector('.selector-library', parseLib(prefs.library));
+        setCheckBox(prefs.styleActiveLine, '.activeline-checkbox');
+        setCheckBox(prefs.lint, '.linter-checkbox');
+    }
+
     function loadPrefs() {
-        chrome.storage.local.get({
+        getStorage({
             settings: 'prefs'
         }, function(item) {
             var setting = item.settings;
@@ -229,9 +364,25 @@ $(document).ready(function() {
         });
     }
 
-    function setEditorOption(option, value) {
-        for (var ed = 0; ed < editor.length; ed++) {
-            editor[ed].setOption(option, value);
+    function eachEdSet(option, value) {
+        for (var d = 0; d < editor.length; d++) {
+            getEditor(d).setOption(option, value);
+        }
+    }
+
+    function setEditorOption(array, obj) {
+        var option, value;
+        if (array) {
+            array.forEach(function(val, index, arr) {
+                option = array[index].option;
+                value = array[index].value;
+                eachEdSet(option, value);
+            });
+        }
+        if (obj) {
+            option = obj.option;
+            value = obj.value;
+            eachEdSet(option, value);
         }
     }
 
@@ -241,6 +392,14 @@ $(document).ready(function() {
 
     function changeTabTheme(color) {
         $('.tabs, .overflow-menu').css('background-color', color);
+    }
+
+    function getCMColor() {
+        return codeMirror().css('background-color');
+    }
+
+    function setConfig(option, value) {
+        config[option] = value;
     }
     $('.settings').scroll(function() {
         var scroll = $(this).scrollTop();
@@ -252,48 +411,55 @@ $(document).ready(function() {
     });
     $(document).on('click', '.activeline-checkbox', function() {
         if ($(this).hasClass('active-checkbox')) {
-            $(this).removeClass('active-checkbox');
-            $(this).find('.material-icons').text('');
-            setEditorOption('styleActiveLine', false);
+            setCheckBox(false, '.activeline-checkbox');
+            setEditorOption(false, {
+                option: 'styleActiveLine',
+                value: false
+            });
         } else {
-            $(this).addClass('active-checkbox');
-            $(this).find('.material-icons').text('check');
-            setEditorOption('styleActiveLine', true);
+            setCheckBox(true, '.activeline-checkbox');
+            setEditorOption(false, {
+                option: 'styleActiveLine',
+                value: true
+            });
         }
         savePrefs();
     });
     $(document).on('click', '.linter-checkbox', function() {
         if ($(this).hasClass('active-checkbox')) {
-            $(this).removeClass('active-checkbox');
-            $(this).find('.material-icons').text('');
-            setEditorOption('lint', false);
+            setCheckBox(false, '.linter-checkbox');
+            setEditorOption(false, {
+                option: 'lint',
+                value: false
+            });
         } else {
-            $(this).addClass('active-checkbox');
-            $(this).find('.material-icons').text('check');
-            setEditorOption('lint', true);
+            setCheckBox(true, '.linter-checkbox');
+            setEditorOption(false, {
+                option: 'lint',
+                value: true
+            });
         }
         savePrefs();
     });
     $(document).on('click', '.dropdown .theme', function() {
         var option = 'theme',
             value = $(this).text().replace(/ /g, '-');
-        $('.active').attr('class', 'tab active active-' + value);
+        getActiveTab().attr('class', 'tab active active-' + value);
         setDDOP($('.selector-theme'), $(this).text());
-        setEditorOption(option, value);
-        config.theme = value;
-        var color = $('.CodeMirror').css('background-color');
-        loadColor(color);
-        changeTabTheme(color);
+        setEditorOption(false, {
+            option: option,
+            value: value
+        });
+        setConfig(option, value);
+        loadColor(getCMColor());
+        changeTabTheme(getCMColor());
         openDropDown($(this).parent());
         savePrefs();
     });
-    String.prototype.capitalizeFirstLetter = function() {
-        return this.charAt(0).toUpperCase() + this.slice(1);
-    };
     $(document).on('click', '.dropdown .font-fam', function() {
         var font = $(this).text().capitalizeFirstLetter();
         setDDOP($('.selector-font'), $(this).text());
-        $('.CodeMirror').css('font-family', font);
+        codeMirror().css('font-family', font);
         refreshEditors();
         openDropDown($(this).parent());
         savePrefs();
@@ -301,7 +467,7 @@ $(document).ready(function() {
     $(document).on('click', '.dropdown .font-size', function() {
         var fontSize = $(this).text();
         setDDOP($('.selector-font-size'), fontSize);
-        $('.CodeMirror').css('font-size', fontSize);
+        codeMirror().css('font-size', fontSize);
         refreshEditors();
         openDropDown($(this).parent());
         savePrefs();
@@ -309,9 +475,12 @@ $(document).ready(function() {
     $(document).on('click', '.dropdown .tab-size', function() {
         var tabSize = Number($(this).text());
         setDDOP($('.selector-tab-size'), tabSize);
-        setEditorOption('tabSize', tabSize);
-        config.tabSize = tabSize;
-        config.indentUnit = tabSize;
+        setEditorOption(false, {
+            option: 'tabSize',
+            value: tabSize
+        });
+        setConfig('tabSize', tabSize);
+        setConfig('indentUnit', tabSize);
         refreshEditors();
         openDropDown($(this).parent());
         savePrefs();
@@ -324,8 +493,11 @@ $(document).ready(function() {
             wrap = true;
         }
         setDDOP($('.selector-wrap'), $(this).text());
-        setEditorOption('lineWrapping', wrap);
-        config.lineWrapping = wrap;
+        setEditorOption(false, {
+            option: 'lineWrapping',
+            value: wrap
+        });
+        setConfig('lineWrapping', wrap);
         refreshEditors();
         openDropDown($(this).parent());
         savePrefs();
@@ -351,24 +523,17 @@ $(document).ready(function() {
         $.get(url, function(data) {
             var folderUsed;
             if (!folderToRemove) {
-                folderUsed = $('.projects').children().first();
+                folderUsed = projects().children().first();
             } else {
-                if (folderToRemove.find('.material-icons').first().text() == 'keyboard_arrow_down' || folderToRemove.find('.material-icons').eq(1).text() == 'book') {
+                if (getMatIcons(folderToRemove).first().text() == 'keyboard_arrow_down' || getMatIcons(folderToRemove).eq(1).text() == 'book') {
                     folderUsed = folderToRemove;
                 } else {
                     folderUsed = folderToRemove.parent().parent();
                 }
             }
-            var dirName = folderUsed.find('.folder-name').first().text();
+            var dirName = getFolderName(folderUsed);
             var dirPath = folderUsed.attr('path');
-            var getMatchingDirEntry = function(obj) {
-                var path = cleanPath(obj.entry);
-                if (obj.entry.name == dirName && path == dirPath) {
-                    return obj;
-                }
-            };
-            var dirEntry = directories.find(getMatchingDirEntry);
-            dirEntry = dirEntry.entry;
+            var dirEntry = getEntry(dirName, dirPath, false, true);
             dirEntry.getFile(name, {
                 create: true,
                 exclusive: true
@@ -381,9 +546,7 @@ $(document).ready(function() {
                 files.push({
                     entry: fileEntry
                 });
-                var name = fileEntry.name;
-                name = replaceName(name);
-                name = name.replace(/\./g, '');
+                var name = replaceName(fileEntry.name);
                 var path = cleanPath(fileEntry);
                 //create div
                 var div = document.createElement('div');
@@ -401,9 +564,9 @@ $(document).ready(function() {
         var name = $(this).text();
         var folderUsed;
         if (!folderToRemove) {
-            folderUsed = $('.projects').children().first();
+            folderUsed = projects().children().first();
         } else {
-            if (folderToRemove.find('.material-icons').first().text() == 'keyboard_arrow_down' || folderToRemove.find('.material-icons').eq(1).text() == 'book') {
+            if (getMatIcons(folderToRemove).first().text() == 'keyboard_arrow_down' || getMatIcons(folderToRemove).eq(1).text() == 'book') {
                 folderUsed = folderToRemove;
             } else {
                 folderUsed = folderToRemove.parent().parent();
@@ -412,13 +575,13 @@ $(document).ready(function() {
         var fileNames = [];
 
         openDropDown($(this).parent());
-        if (!folderUsed || $('.projects').children().length === 0) {
+        if (!folderUsed || projects().children().length === 0) {
             $('.settingdiv span').text('No folder selected. Click on the folder you wish to add ' + name + ' to in the projects section.');
             $('.settingdiv span').show();
         } else {
             folderUsed.children().last().children().each(function() {
                 if ($(this).hasClass('file')) {
-                    var thisName = $(this).find('.file-name').first().text();
+                    var thisName = getFileName($(this));
                     fileNames.push(thisName);
                 }
             });
@@ -467,24 +630,24 @@ $(document).ready(function() {
 
     function openSettings() {
         $('.dropdown').hide();
-        $('.settings-container').show().stop().animate({
+        settings().show().stop().animate({
             top: '50%',
             opacity: '1'
         }, 200);
-        $('.bg').show().stop().animate({
+        bg().show().stop().animate({
             opacity: '0.6'
         }, 200);
         $('.settingdiv span').hide();
     }
 
     function closeSettings() {
-        $('.settings-container').stop().animate({
+        settings().stop().animate({
             top: '60%',
             opacity: '0'
         }, 200, function() {
             $(this).hide();
         });
-        $('.bg').stop().animate({
+        bg().stop().animate({
             opacity: '0'
         }, 200, function() {
             $(this).hide();
@@ -494,32 +657,14 @@ $(document).ready(function() {
         closeSettings();
         focusEditor();
     });
-    $('.bg').click(function() {
+    bg().click(function() {
         if ($('.dialogue').is(':visible')) {
             closeSaveBox();
         } else {}
-        if ($('.remove-dialogue').is(':visible')) {
-            closeRemoveDialog();
-        } else {}
-        if ($('.folder-remove-dialogue').is(':visible')) {
-            closeFolderRemoveDialog();
+        if ($('.dialog').is('visible')) {
+            closeDialog('.dialog');
         }
-        if ($('.new-file-dialogue').is(':visible')) {
-            closeNewFileDialog();
-        }
-        if ($('.new-folder-dialogue').is(':visible')) {
-            closeNewFolderDialog();
-        }
-        if ($('.new-project-dialogue').is(':visible')) {
-            closeProjectDialog();
-        }
-        if ($('.rename-file-dialogue').is(':visible')) {
-            closeRenameFileDialog();
-        }
-        if ($('.rename-folder-dialogue').is(':visible')) {
-            closeRenameFolderDialog();
-        }
-        if ($('.settings-container').is(':visible')) {
+        if (settings().is(':visible')) {
             closeSettings();
         }
         focusEditor();
@@ -546,7 +691,8 @@ $(document).ready(function() {
         }
         this.splice(newIndex, 0, this.splice(oldIndex, 1)[0]);
     };
-    $('.tabs').sortable({
+    var sorting;
+    tabContainer().sortable({
         axis: 'x',
         distance: 20,
         tolerance: 'pointer',
@@ -554,23 +700,25 @@ $(document).ready(function() {
         start: function(e, ui) {
             e.stopImmediatePropagation();
             e.stopPropagation();
+            sorting = true;
             $(this).attr('data-previndex', ui.item.index());
             $(this).addClass('noclick');
         },
         stop: function(e, ui) {
             e.stopImmediatePropagation();
             e.stopPropagation();
-            var newIndex = ui.item.index();
-            var oldIndex = $(this).attr('data-previndex');
-            var thisID = ui.item.attr('id').replace('tab', '');
-            var newID = $('.workspace > textarea').eq(newIndex).attr('id').replace('textarea', '');
+            sorting = false;
+            var newIndex = ui.item.index(),
+                oldIndex = $(this).attr('data-previndex'),
+                thisID = replaceTabID(ui.item),
+                newID = $('.workspace > textarea').eq(newIndex).attr('id').replace('textarea', '');
             $(this).removeAttr('data-previndex');
             if (oldIndex > newIndex) {
                 $('#textarea' + thisID).insertBefore($('#textarea' + newID));
-                $('.CodeMirror').eq(oldIndex).insertBefore($('#textarea' + newID));
+                codeMirror().eq(oldIndex).insertBefore($('#textarea' + newID));
             } else {
-                $('.CodeMirror').eq(oldIndex).insertAfter($('.CodeMirror').eq(newIndex));
-                $('#textarea' + thisID).insertBefore($('.CodeMirror').eq(newIndex));
+                codeMirror().eq(oldIndex).insertAfter(codeMirror().eq(newIndex));
+                $('#textarea' + thisID).insertBefore(codeMirror().eq(newIndex));
             }
             editor.move(oldIndex, newIndex);
             fileDirs.move(oldIndex, newIndex);
@@ -579,13 +727,13 @@ $(document).ready(function() {
     }).disableSelection();
 
     function autoSave(g) {
-        editor[g].on('change', function() {
+        getEditor(g).on('change', function() {
             $('.active .close').text('fiber_manual_record');
             $('.active .close').addClass('edit');
         });
-        var charWidth = editor[g].defaultCharWidth(),
+        var charWidth = getEditor(g).defaultCharWidth(),
             basePadding = 4;
-        editor[g].on('renderLine', function(cm, line, elt) {
+        getEditor(g).on('renderLine', function(cm, line, elt) {
             var off = CodeMirror.countColumn(line.text, null, cm.getOption("tabSize")) * charWidth;
             elt.style.textIndent = '-' + off + 'px';
             elt.style.paddingLeft = (basePadding + off) + 'px';
@@ -595,27 +743,27 @@ $(document).ready(function() {
 
     function findBigNumber() {
         numbers = [];
-        for (var l = 0; l < $('.tab').length; l++) {
-            var thisID = $('.tab').eq(l).attr('id').replace('tab', '');
+        for (var l = 0; l < tab().length; l++) {
+            var thisID = replaceTabID(tab(l));
             numbers.push(Number(thisID));
         }
     }
 
     function newTab() {
         var index;
-        if ($('.tab').length === 0) {
+        if (tab().length === 0) {
             index = 0;
         } else {
             findBigNumber();
             index = Math.max.apply(null, numbers) + 1;
         }
-        $('.tab').removeClass('active');
-        $('.tab').removeClass('active-' + config.theme);
-        $('.tabs').append('<div id="tab' + index + '"class="tab active active-' + config.theme + '"><input class="title"/><span class="close material-icons">close</span></div>');
+        tab().removeClass('active');
+        tab().removeClass('active-' + config.theme);
+        tabContainer().append('<div id="tab' + index + '"class="tab active active-' + config.theme + '"><input class="title"/><span class="close material-icons">close</span></div>');
         setFileName('untitled.txt');
-        $('.workspace').append('<textarea id="textarea' + index + '"></textarea>');
-        $('.active').attr('id', 'tab' + index);
-        $('.CodeMirror').hide();
+        workSpace().append('<textarea id="textarea' + index + '"></textarea>');
+        getActiveTab().attr('id', 'tab' + index);
+        codeMirror().hide();
         resizeTabs();
         $('#textarea' + index).show();
         createDataAttr('');
@@ -633,12 +781,12 @@ $(document).ready(function() {
 
     function loadAutoTab() {
         newTab();
-        var index = $('.active').index();
-        editor[index] = CodeMirror.fromTextArea(document.getElementById('textarea' + index), config);
+        var index = getActiveTab().index();
+        setEditor(index, CodeMirror.fromTextArea(document.getElementById('textarea' + index), config));
         setFileName('untitled.txt');
         fileDirs[index] = '';
         setTimeout(function() {
-            $('.active').click();
+            getActiveTab().click();
             autoSave(index);
         });
     }
@@ -669,19 +817,18 @@ $(document).ready(function() {
                 top: y + 'px',
                 left: x + 'px'
             }).addClass("animate");
-            $('.tab').removeClass('active');
-            $('.tab').removeClass('active-' + config.theme);
+            tab().removeClass('active');
+            tab().removeClass('active-' + config.theme);
             $(this).addClass('active');
             $(this).addClass('active-' + config.theme);
-            $('.CodeMirror').hide();
-            $('.CodeMirror').eq($('.active').index()).show();
+            codeMirror().hide();
+            codeMirror().eq(getActiveTab().index()).show();
             changeMode();
             savedFileEntry = fileDirs[$(this).index()];
-
             $('.folder').removeClass('active-folder');
             $('.file').removeClass('active-file');
             $('.file[path="' + $(this).attr('path') + '"]').addClass('active-file');
-            editor[$('.active').index()].refresh();
+            getEditor().refresh();
             focusEditor();
         }
     });
@@ -693,10 +840,10 @@ $(document).ready(function() {
             path = tab.attr('path');
 
         var fileName = $(this).val();
-        if(path === undefined || ''){
+        if (path === undefined || '') {
 
-        }else{
-          var entry = getEntry(fileName, path, true, false, false);
+        } else {
+            var entry = getEntry(fileName, path, true, false, false);
         }
         if (entry === undefined) {
             entry = getEntry(fileName, path, false, false, true, true);
@@ -718,7 +865,7 @@ $(document).ready(function() {
                 $('.tooltip').css({
                     top: input.offset().top + input.height() - 20,
                     left: input.offset().left,
-                    backgroundColor: shadeRGBColor($('.active').css('box-shadow').replace(/^.*(rgba?\([^)]+\)).*$/, '$1'), 0.1)
+                    backgroundColor: shadeRGBColor(getActiveTab().css('box-shadow').replace(/^.*(rgba?\([^)]+\)).*$/, '$1'), 0.1)
                 });
                 $('.tooltip').show().animate({
                     top: Number($('.tooltip').css('top').replace('px', '')) + 25,
@@ -745,7 +892,7 @@ $(document).ready(function() {
             top: '50%',
             opacity: '1'
         }, 200);
-        $('.bg').show().stop().animate({
+        bg().show().stop().animate({
             opacity: '0.6'
         }, 200);
         closedTab = closed;
@@ -758,7 +905,7 @@ $(document).ready(function() {
         }, 200, function() {
             $(this).hide();
         });
-        $('.bg').stop().animate({
+        bg().stop().animate({
             opacity: '0'
         }, 200, function() {
             $(this).hide();
@@ -785,8 +932,8 @@ $(document).ready(function() {
             textID = tabID.replace('tab', 'textarea'),
             tabClass = tabClicked.attr('class'),
             tabIndex = tabClicked.index(),
-            lastObjectIndex = $('.tabs').children().last().index(),
-            tabLength = $('.tab').length;
+            lastObjectIndex = tabContainer().children().last().index(),
+            tabLength = tab().length;
         $('#' + textID).remove();
         $('.CodeMirror:eq(' + tabClicked.index() + ')').remove();
         editor.splice(tabIndex, 1);
@@ -803,14 +950,14 @@ $(document).ready(function() {
                 loadSettings(prefs);
             } else {
                 if (tabClass.indexOf('active') == -1) {
-                    $('.active').click();
+                    getActiveTab().click();
                 } else {
                     if (tabIndex === 0) {
-                        $('.tab').eq(0).click();
+                        tab(0).click();
                     } else if (tabIndex == lastObjectIndex) {
-                        $('.tab').eq(tabIndex - 1).click();
+                        tab(tabIndex - 1).click();
                     } else {
-                        $('.tab').eq(tabIndex).click();
+                        tab(tabIndex).click();
                     }
                 }
             }
@@ -856,9 +1003,9 @@ $(document).ready(function() {
             $('.search-bar').val(window.getSelection());
         }
         if (chrome.app.window.current().isFullscreen()) {
-            $('.workspace').css('height', 'calc(100% - 150px)');
+            workSpace().css('height', 'calc(100% - 150px)');
         } else {
-            $('.workspace').css('height', 'calc(100% - 180px)');
+            workSpace().css('height', 'calc(100% - 180px)');
         }
         $('.search-container').show().stop().animate({
             opacity: '1',
@@ -870,45 +1017,61 @@ $(document).ready(function() {
     }
 
     function closeSearch() {
-        $('.workspace').css('height', 'calc(100% - 80px)');
+        workSpace().css('height', 'calc(100% - 80px)');
         $('.search-container').show().stop().animate({
             opacity: '0',
             bottom: '-100px'
         }, 200, function() {
             $(this).hide();
-            cm = editor[$('.active').index()];
+            cm = getEditor();
             clearSearch(cm);
             focusEditor();
         });
     }
+
+    function setSearch(input) {
+        $('.search-bar').attr('searchNext', input);
+    }
     $('.search-bar').keyup(function() {
-        $(this).css('box-shadow', 'inset 0px -1px 0px 0px rgba(0, 0, 0, 0.2)');
+        text = $(this).val();
+        cm = getEditor();
+        state = getSearchState(cm);
+        setSearch('false');
+        startSearch(cm, state, text);
+        doSearch(cm, false);
+        if ($('.cm-searching').length > 0 || text === '') {
+            $(this).css('box-shadow', 'inset 0px -1px 0px 0px rgba(0, 0, 0, 0.2)');
+        }
     });
     $('.find_next').click(function() {
         text = $('.search-bar').val();
-        cm = editor[$('.active').index()];
+        cm = getEditor();
         state = getSearchState(cm);
+        setSearch('true');
         startSearch(cm, state, text);
         doSearch(cm, false);
     });
     $('.find_prev').click(function() {
         text = $('.search-bar').val();
-        cm = editor[$('.active').index()];
+        cm = getEditor();
         state = getSearchState(cm);
+        setSearch('true');
         startSearch(cm, state, text);
         doSearch(cm, true);
     });
     $('.replace_all').click(function() {
         text = $('.search-bar').val();
         query = $('.search-replace').val();
-        cm = editor[$('.active').index()];
+        cm = getEditor();
+        setSearch('true');
         replaceAll(cm, text, query);
     });
     $('.replace').click(function() {
         query = $('.search-bar').val();
         text = $('.search-replace').val();
-        cm = editor[$('.active').index()];
+        cm = getEditor();
         var cursor = getSearchCursor(cm, query, cm.getCursor("from"));
+        setSearch('true');
         var advance = function() {
             var start = cursor.from(),
                 match;
@@ -952,7 +1115,7 @@ $(document).ready(function() {
         }
         //open prefs
         if (e.ctrlKey && e.keyCode == 80 || e.metaKey && e.keyCode == 80) {
-            if ($('.settings-container').is(':visible')) {
+            if (settings().is(':visible')) {
                 closeSettings();
             } else {
                 openSettings();
@@ -987,7 +1150,7 @@ $(document).ready(function() {
         //toggle sidebar
         if (e.ctrlKey && e.keyCode == 191) {
             e.preventDefault();
-            if ($('.sidebar').width() === 0) {
+            if (sideBar().width() === 0) {
                 calcWidth(250);
             } else {
                 calcWidth(0);
@@ -997,18 +1160,18 @@ $(document).ready(function() {
         //change font size
         //increase
         if (e.ctrlKey && e.keyCode == 187) {
-            if (Number($('.CodeMirror').css('font-size').replace('px', '')) == 36) {
+            if (Number(codeMirror().css('font-size').replace('px', '')) == 36) {
 
             } else {
-                $('.font-size').eq($('.font-size:contains(' + $('.CodeMirror').css('font-size') + ')').index() + 1).click();
+                $('.font-size').eq($('.font-size:contains(' + codeMirror().css('font-size') + ')').index() + 1).click();
             }
         }
         //decrease
         if (e.ctrlKey && e.keyCode == 189) {
-            if (Number($('.CodeMirror').css('font-size').replace('px', '')) == 12) {
+            if (Number(codeMirror().css('font-size').replace('px', '')) == 12) {
 
             } else {
-                $('.font-size').eq($('.font-size:contains(' + $('.CodeMirror').css('font-size') + ')').index() - 1).click();
+                $('.font-size').eq($('.font-size:contains(' + codeMirror().css('font-size') + ')').index() - 1).click();
             }
         }
         //toggle line-wrapping
@@ -1058,8 +1221,8 @@ $(document).ready(function() {
     //menu functionality
     $('.new').click(function() {
         newTab();
-        var index = $('.active').index();
-        editor[index] = CodeMirror.fromTextArea(document.getElementById('textarea' + Number($('.tabs').children().last().attr('id').replace('tab', ''))), config);
+        var index = getActiveTab().index();
+        editor[index] = CodeMirror.fromTextArea(document.getElementById('textarea' + Number(tabContainer().children().last().attr('id').replace('tab', ''))), config);
         if (prefs === undefined) {
             resetPrefs();
         }
@@ -1071,7 +1234,7 @@ $(document).ready(function() {
     });
 
     function createPathAttr(path) {
-        $('.active').attr('path', path);
+        getActiveTab().attr('path', path);
     }
 
     function openFiles(fileEntries, fromDir) {
@@ -1091,14 +1254,14 @@ $(document).ready(function() {
                         createPathAttr(path);
                     }
                     $('.active input').attr('readonly', true);
-                    var newIndex = $('.active').attr('id').replace('tab', '');
+                    var newIndex = replaceTabID(getActiveTab());
                     var index = Number(newIndex);
-                    var actIndex = $('.active').index();
+                    var actIndex = getActiveTab().index();
                     fileDirs[actIndex] = fileEntry;
-                    editor[actIndex] = CodeMirror.fromTextArea(document.getElementById('textarea' + index), config);
-                    editor[actIndex].getDoc().setValue(text);
-                    editor[actIndex].getDoc().clearHistory();
-                    editor[actIndex].focus();
+                    setEditor(actIndex, CodeMirror.fromTextArea(document.getElementById('textarea' + index), config));
+                    getEditor(actIndex).getDoc().setValue(text);
+                    getEditor(actIndex).getDoc().clearHistory();
+                    getEditor(actIndex).focus();
                     autoSave(actIndex);
                     changeMode();
                     if (prefs === undefined) {
@@ -1121,13 +1284,13 @@ $(document).ready(function() {
         });
     });
 
-    $('.sidebar').resizable({
+    sideBar().resizable({
         handles: 'e',
         maxWidth: 600,
         "resize": function(event, ui) {
             var width = ui.size.width;
-            $('.tabs').width($(window).width() - 70 - width);
-            $('.workspace').width($(window).width() - width);
+            tabContainer().width($(window).width() - 70 - width);
+            workSpace().width($(window).width() - width);
             $('.search-container').width($(window).width() - width);
             resizeTabs();
         }
@@ -1138,7 +1301,7 @@ $(document).ready(function() {
             top: '50%',
             opacity: '1'
         }, 200);
-        $('.bg').show().stop().animate({
+        bg().show().stop().animate({
             opacity: '0.6'
         }, 200);
     }
@@ -1150,7 +1313,7 @@ $(document).ready(function() {
         }, 200, function() {
             $(this).hide();
         });
-        $('.bg').stop().animate({
+        bg().stop().animate({
             opacity: '0'
         }, 200, function() {
             $(this).hide();
@@ -1176,7 +1339,7 @@ $(document).ready(function() {
             projectDir = dirEntry;
         }
     }
-    $('.projects').scroll(function() {
+    projects().scroll(function() {
         contextMenuOff();
         folderContextOff();
     });
@@ -1214,8 +1377,8 @@ $(document).ready(function() {
             div.className = thisName + ' folder';
             div.setAttribute('path', path);
             div.innerHTML = '<div class="material-icons">keyboard_arrow_right</div><div class="material-icons">book</div>' + '<label class="folder-name">' + dirEntry.name + '</label>' + '<ul class="' + thisName + 'ul"></ul>';
-            $('.projects').append(div);
-            $('.projects').children().last().children().last().hide();
+            projects().append(div);
+            projects().children().last().children().last().hide();
             closeProjectDialog();
             focusEditor();
         });
@@ -1227,15 +1390,15 @@ $(document).ready(function() {
         }
         var folderNames = [];
         if ($(this).hasClass('new-project-input')) {
-            $('.projects').children().each(function(index) {
-                folderNames.push($(this).find('.folder-name').first().text());
+            projects().children().each(function(index) {
+                folderNames.push(getFolderName($(this)));
             });
             if (e.keyCode == 13) {
                 $('.new-project-create').click();
             }
         } else {
             folderToRemove.children().last().children().each(function(index) {
-                folderNames.push($(this).find('.folder-name').first().text());
+                folderNames.push(getFolderName($(this)));
             });
         }
         if (folderNames.indexOf(folderName) > -1) {
@@ -1439,7 +1602,7 @@ $(document).ready(function() {
             }
             reloadDirEntries(dirEntry);
             setTimeout(function() {
-                $('.projects').append(docFrag.children);
+                projects().append(docFrag.children);
                 sortDirect();
                 hidePreLoad();
             }, time);
@@ -1485,7 +1648,7 @@ $(document).ready(function() {
                                     }
                                     reloadDirEntries(dirEntry);
                                     setTimeout(function() {
-                                        $('.projects').append(docFrag.children);
+                                        projects().append(docFrag.children);
                                         sortDirect();
                                         hidePreLoad();
                                     }, time);
@@ -1499,7 +1662,7 @@ $(document).ready(function() {
     });
 
     function setMaterialPadding(parent) {
-        var thisMaterial = parent.find('.material-icons').first();
+        var thisMaterial = getMatIcons(parent).first();
         var multiplier = parent.parentsUntil('.projects').length;
         var padding;
         //double for files
@@ -1538,7 +1701,6 @@ $(document).ready(function() {
         var entry;
         var getMatchingEntry = function(obj) {
             var objPath = cleanPath(obj.entry);
-            console.log(path, objPath);
             if (obj.entry.name == name && path == objPath) {
                 return obj;
             }
@@ -1580,11 +1742,11 @@ $(document).ready(function() {
             $('.file').removeClass('active-file');
             $(this).addClass('active-file');
             var temp = [];
-            var thisName = $(this).find('.file-name').first().text(),
+            var thisName = getFileName($(this)),
                 thisPath = $(this).attr('path'),
                 projectFileEntry = getEntry(thisName, thisPath, true, false);
             if (checkTabs(thisName, thisPath) === true) {
-                $('.tab').eq(editIndex).click();
+                tab(editIndex).click();
             } else {
                 temp.push(projectFileEntry);
                 openFiles(temp, true);
@@ -1651,146 +1813,27 @@ $(document).ready(function() {
         folderToRemove,
         folderRemoveTitle;
 
-    function openRemoveDialog() {
-        $('.remove-dialogue .remove-dialogue-text').text('Are you sure you want to remove ' + removeTitle + '? This action cannot be undone.');
-        $('.remove-dialogue').show().stop().animate({
+    function openDialog(dialog, dialogText, text) {
+        if (text && dialogText) {
+            $(dialogText).text(text);
+        }
+        $(dialog).show().stop().animate({
             top: '50%',
             opacity: '1'
         }, 200);
-        $('.bg').show().stop().animate({
+        bg().show().stop().animate({
             opacity: '0.6'
         }, 200);
     }
 
-    function closeRemoveDialog() {
-        $('.remove-dialogue').stop().animate({
+    function closeDialog(dialog) {
+        $(dialog).stop().animate({
             top: '60%',
             opacity: '0'
         }, 200, function() {
             $(this).hide();
         });
-        $('.bg').stop().animate({
-            opacity: '0'
-        }, 200, function() {
-            $(this).hide();
-        });
-    }
-
-    function openFolderRemoveDialog() {
-        $('.folder-remove-dialogue .folder-remove-dialogue-text').text('Are you sure you want to remove ' + folderRemoveTitle + '? This will PERMANENTLY delete this folder from your computer.');
-        $('.folder-remove-dialogue').show().stop().animate({
-            top: '50%',
-            opacity: '1'
-        }, 200);
-        $('.bg').show().stop().animate({
-            opacity: '0.6'
-        }, 200);
-    }
-
-    function closeFolderRemoveDialog() {
-        $('.folder-remove-dialogue').stop().animate({
-            top: '60%',
-            opacity: '0'
-        }, 200, function() {
-            $(this).hide();
-        });
-        $('.bg').stop().animate({
-            opacity: '0'
-        }, 200, function() {
-            $(this).hide();
-        });
-    }
-
-    function openNewFileDialog() {
-        $('.new-file-dialogue').show().stop().animate({
-            top: '50%',
-            opacity: '1'
-        }, 200);
-        $('.bg').show().stop().animate({
-            opacity: '0.6'
-        }, 200);
-    }
-
-    function closeNewFileDialog() {
-        $('.new-file-dialogue').stop().animate({
-            top: '60%',
-            opacity: '0'
-        }, 200, function() {
-            $(this).hide();
-        });
-        $('.bg').stop().animate({
-            opacity: '0'
-        }, 200, function() {
-            $(this).hide();
-        });
-    }
-
-    function openNewFolderDialog() {
-        $('.new-folder-dialogue').show().stop().animate({
-            top: '50%',
-            opacity: '1'
-        }, 200);
-        $('.bg').show().stop().animate({
-            opacity: '0.6'
-        }, 200);
-    }
-
-    function closeNewFolderDialog() {
-        $('.new-folder-dialogue').stop().animate({
-            top: '60%',
-            opacity: '0'
-        }, 200, function() {
-            $(this).hide();
-        });
-        $('.bg').stop().animate({
-            opacity: '0'
-        }, 200, function() {
-            $(this).hide();
-        });
-    }
-
-    function openRenameFileDialog() {
-        $('.rename-file-dialogue').show().stop().animate({
-            top: '50%',
-            opacity: '1'
-        }, 200);
-        $('.bg').show().stop().animate({
-            opacity: '0.6'
-        }, 200);
-    }
-
-    function closeRenameFileDialog() {
-        $('.rename-file-dialogue').stop().animate({
-            top: '60%',
-            opacity: '0'
-        }, 200, function() {
-            $(this).hide();
-        });
-        $('.bg').stop().animate({
-            opacity: '0'
-        }, 200, function() {
-            $(this).hide();
-        });
-    }
-
-    function openRenameFolderDialog() {
-        $('.rename-folder-dialogue').show().stop().animate({
-            top: '50%',
-            opacity: '1'
-        }, 200);
-        $('.bg').show().stop().animate({
-            opacity: '0.6'
-        }, 200);
-    }
-
-    function closeRenameFolderDialog() {
-        $('.rename-folder-dialogue').stop().animate({
-            top: '60%',
-            opacity: '0'
-        }, 200, function() {
-            $(this).hide();
-        });
-        $('.bg').stop().animate({
+        bg().stop().animate({
             opacity: '0'
         }, 200, function() {
             $(this).hide();
@@ -1858,28 +1901,40 @@ $(document).ready(function() {
     $(document).on('contextmenu', '.projects .file', function(e) {
         e.stopPropagation();
         e.preventDefault();
-        removeTitle = $(this).find('.file-name').first().text();
+        removeTitle = getFileName($(this));
         contextMenuName = removeTitle;
         contextMenuPath = $(this).attr('path');
         fileToRemove = $(this);
         contextMenuOn(e);
     });
     $('.folder-contextmenu .folder-rename').click(function() {
-        openRenameFolderDialog();
+        openDialog('.rename-folder-dialogue');
         contextMenuOff();
         resetInput('.rename-folder-input', folderContextMenuName);
     });
     $('.rename-folder-cancel').click(function() {
-        closeRenameFolderDialog();
+        closeDialog('.rename-folder-dialogue');
         focusEditor();
     });
 
     function removeChildDirectories(directory) {
         var directoryFolders = jQuery.grep(directories, function(elem) {
-            return (elem.entry.fullPath.indexOf(directory.fullPath) > -1);
+            var thisRootDir = splitAndReturn(elem.entry.fullPath, '/', 0);
+            thisRootDir.shift();
+            thisRootDir = thisRootDir[0];
+            var thatRootDir = splitAndReturn(directory.fullPath, '/', 0);
+            thatRootDir.shift();
+            thatRootDir = thatRootDir[0];
+            return (thisRootDir == thatRootDir);
         });
         var directoryFiles = jQuery.grep(files, function(elem) {
-            return (elem.entry.fullPath.indexOf(directory.fullPath) > -1);
+            var thisRootDir = splitAndReturn(elem.entry.fullPath, '/', 0);
+            thisRootDir.shift();
+            thisRootDir = thisRootDir[0];
+            var thatRootDir = splitAndReturn(directory.fullPath, '/', 0);
+            thatRootDir.shift();
+            thatRootDir = thatRootDir[0];
+            return (thisRootDir == thatRootDir);
         });
         if (directoryFolders.length !== 0) {
             for (var j = 0; j < directoryFolders.length; j++) {
@@ -1924,10 +1979,10 @@ $(document).ready(function() {
             var path = $(this).attr('path');
             $(this).attr('path', path.replace('/' + oldName + '/', '/' + newName + '/'));
             if ($(this).hasClass('file')) {
-                var fileName = $(this).find('.file-name').first().text();
+                var fileName = getFileName($(this));
                 if (checkTabs(fileName, path)) {
-                    $('.tab').eq(editIndex).attr('path', path.replace('/' + oldName + '/', '/' + newName + '/'));
-                    var newPath = $('.tab').eq(editIndex).attr('path'),
+                    tab(editIndex).attr('path', path.replace('/' + oldName + '/', '/' + newName + '/'));
+                    var newPath = tab(editIndex).attr('path'),
                         entry = getEntry(fileName, newPath, true, false);
                     fileDirs[editIndex] = entry;
                 }
@@ -1941,7 +1996,7 @@ $(document).ready(function() {
         }
         var folderNames = [];
         folderToRemove.parent().children().each(function(index) {
-            var text = $(this).find('.folder-name').first().text();
+            var text = getFolderName($(this));
             if (text == folderContextMenuName) {
 
             } else {
@@ -1969,19 +2024,19 @@ $(document).ready(function() {
                     folderToRemove.attr('class', nameForClass + ' folder');
                     folderToRemove.attr('path', path);
                     folderToRemove.children().last().attr('class', nameForClass + 'ul');
-                    folderToRemove.find('.folder-name').first().text(newFolderName);
+                    setFolderName(folderToRemove, newFolderName);
                     removeChildDirectories(directory);
                     reloadLoadedEntries(newFolderEntry, function() {
                         assignEntries('.' + nameForClass + 'ul', directory.name, newFolderEntry.name);
                     });
-                    closeRenameFolderDialog();
+                    closeDialog('.rename-folder-dialogue');
                     focusEditor();
                 });
             });
         }
     });
     $('.contextmenu .rename').click(function() {
-        openRenameFileDialog();
+        openDialog('.rename-file-dialogue');
         contextMenuOff();
         resetInput('.rename-file-input', contextMenuName);
     });
@@ -1998,8 +2053,8 @@ $(document).ready(function() {
                     fileToRemove.attr('class', nameForClass + ' file');
                 }
                 fileToRemove.attr('path', path);
-                fileToRemove.find('.material-icons').text(material);
-                fileToRemove.find('.file-name').first().text(newFileEntry.name);
+                getMatIcons(fileToRemove).text(material);
+                setFileName(fileToRemove, newFileEntry.name);
                 oldFileEntry.entry = newFileEntry;
                 if (isTab) {
                     changeTab(editIndex, newName, path);
@@ -2015,9 +2070,9 @@ $(document).ready(function() {
     }
 
     function changeTab(index, name, path) {
-        $('.tab').eq(index).find('.title').val(name);
-        $('.tab').eq(index).attr('path', path);
-        $('.tab').eq(index).attr('data', name + 'isOpen');
+        tab(index).find('.title').val(name);
+        tab(index).attr('path', path);
+        tab(index).attr('data', name + 'isOpen');
     }
     $('.rename-file-create').click(function() {
         var newName = $(this).parent().parent().find('input').val(),
@@ -2028,7 +2083,7 @@ $(document).ready(function() {
         }
         var fileNames = [];
         fileToRemove.parent().children().each(function(index) {
-            var text = $(this).find('.file-name').first().text();
+            var text = getFileName($(this));
             if (text == oldName) {
 
             } else {
@@ -2051,28 +2106,29 @@ $(document).ready(function() {
             } else {
                 rename(projectDirEntry, projectFileEntry.entry.name, newName, projectFileEntry, fileToRemove, false);
             }
-            closeRenameFileDialog();
+            closeDialog('.rename-file-dialogue');
             focusEditor();
         }
     });
     $('.rename-file-cancel').click(function() {
-        closeRenameFileDialog();
+        closeDialog('.rename-file-dialogue');
         focusEditor();
     });
     $('.contextmenu .remove').click(function() {
-        openRemoveDialog();
+        var text = 'Are you sure you want to remove ' + removeTitle + '? This action cannot be undone.';
+        openDialog('.remove-dialogue', '.remove-dialogue-text', text);
         contextMenuOff();
     });
     $(document).on('contextmenu', '.projects .folder', function(e) {
         e.stopPropagation();
         e.preventDefault();
-        folderRemoveTitle = $(this).find('.folder-name').first().text();
+        folderRemoveTitle = getFolderName($(this));
         folderContextMenuName = folderRemoveTitle;
         folderContextMenuPath = $(this).attr('path');
         folderToRemove = $(this);
         folderContext(e);
 
-        var projectChildren = $('.projects').children();
+        var projectChildren = projects().children();
         var path = [];
         projectChildren.each(function() {
             path.push($(this).attr('path'));
@@ -2107,7 +2163,7 @@ $(document).ready(function() {
         }
         var fileNames = [];
         fileToRemove.parent().children().each(function(index) {
-            var text = $(this).find('.file-name').first().text();
+            var text = getFileName($(this));
             if (text == oldName) {
 
             } else {
@@ -2133,7 +2189,7 @@ $(document).ready(function() {
         }
         var folderNames = [];
         folderToRemove.parent().children().each(function(index) {
-            var text = $(this).find('.folder-name').first().text();
+            var text = getFolderName($(this));
             if (text == oldName) {
 
             } else {
@@ -2173,7 +2229,7 @@ $(document).ready(function() {
         }
     });
     $('.folder-contextmenu .folder-addfolder').click(function() {
-        openNewFolderDialog();
+        openDialog('.new-folder-dialogue');
         folderContextOff();
         resetInput('.new-folder-input', '');
     });
@@ -2184,7 +2240,7 @@ $(document).ready(function() {
         }
         var folderNames = [];
         folderToRemove.children().last().children().each(function(index) {
-            folderNames.push($(this).find('.folder-name').first().text());
+            folderNames.push(getFolderName($(this)));
         });
         if (folderNames.indexOf(folderName) > -1) {
             $('.new-folder-input').css('box-shadow', 'inset 0px -1px 0px 0px #d61f1f ');
@@ -2202,65 +2258,73 @@ $(document).ready(function() {
                 thisName = replaceName(thisName);
                 var div = document.createElement('div');
                 var path = cleanPath(dirEntry);
-                div.className = thisName + ' folder';
+                div.className = thisName + ' folder active-folder';
                 div.setAttribute('path', path);
                 div.innerHTML = '<div class="material-icons">keyboard_arrow_right</div><div class="material-icons">folder</div>' + '<label class="folder-name">' + dirEntry.name + '</label>' + '<ul class="' + thisName + 'ul"></ul>';
+                if (getMatIcons(folderToRemove).first().text() == 'keyboard_arrow_right') {
+                    folderToRemove.click();
+                }
+                $('.folder').removeClass('active-folder');
+                $('.file').removeClass('active-file');
                 folderToRemove.children().last().append(div);
                 folderToRemove.children().last().children().last().children().last().hide();
                 folderToRemove.children().last().children().last().insertBefore(folderToRemove.children().last().children().first());
                 setMaterialPadding(folderToRemove.children().last().children().first());
-                closeNewFolderDialog();
+                closeDialog('.new-folder-dialogue');
             });
         }
     });
     $('.new-folder-cancel').click(function() {
-        closeNewFolderDialog();
+        closeDialog('.new-folder-dialogue');
         focusEditor();
     });
     $('.folder-contextmenu .folder-remove').click(function() {
-        openFolderRemoveDialog();
+        var text = 'Are you sure you want to remove ' + folderRemoveTitle + '? This will PERMANENTLY delete this folder from your computer.';
+        openDialog('.folder-remove-dialogue', '.folder-remove-dialogue-text', text);
         folderContextOff();
     });
     $('.folder-remove-yes').click(function() {
-        var entryToRemove = getEntry(folderContextMenuName, folderContextMenuPath, false, true);
-        for (var i = 0; i < rootDirs.length; i++) {
-            chrome.fileSystem.restoreEntry(rootDirs[i], function(entry) {
-                if (entryToRemove.fullPath == entry.fullPath) {
-                    rootDirs.splice(i, 1); //remove from rootDirs
+        var entryToRemove = getEntry(folderRemoveTitle, folderContextMenuPath, false, true);
+        entryToRemove.removeRecursively(function() {
+            tab().each(function(index) {
+                if ($(this).attr('path') === undefined) {
+
+                } else {
+                    var path = cleanPath(entryToRemove.fullPath);
+                    if ($(this).attr('path').indexOf(path) > -1) {
+                        closeTab($(this).find('.close'), true);
+                    }
                 }
             });
-        }
-        $('.tab').each(function(index) {
-            if ($(this).attr('path') === undefined) {
+            if (getActiveTab().length == 1) {
 
             } else {
-                if ($(this).attr('path').indexOf(entryToRemove.fullPath) > -1) {
-                    closeTab($(this).find('.close'), true);
-                }
+                tab(Math.round(Math.random() * (tab().length - 1))).click();
             }
-        });
-        entryToRemove.removeRecursively(function() {
-            if ($('.active').length == 1) {
-
-            } else {
-                $('.tab').eq(Math.round(Math.random() * ($('.tab').length - 1))).click();
+            for (var i = 0; i < rootDirs.length; i++) {
+                chrome.fileSystem.restoreEntry(rootDirs[i], function(entry) {
+                    if (entryToRemove.fullPath == entry.fullPath) {
+                        rootDirs.splice(i, 1); //remove from rootDirs
+                    }
+                });
             }
+            resizeTabs();
             folderToRemove.remove();
-            closeFolderRemoveDialog();
+            closeDialog('.folder-remove-dialogue');
             focusEditor();
         });
     });
     $('.folder-remove-no').click(function() {
-        closeFolderRemoveDialog();
+        closeDialog('.folder-remove-dialogue');
         focusEditor();
     });
     $('.folder-addfile').click(function() {
-        openNewFileDialog();
+        openDialog('.new-file-dialogue');
         contextMenuOff();
         resetInput('.new-file-input', '');
     });
     $('.new-file-cancel').click(function() {
-        closeNewFileDialog();
+        closeDialog('.new-file-dialogue');
         focusEditor();
     });
     $('.new-file-create').click(function() {
@@ -2270,13 +2334,12 @@ $(document).ready(function() {
         }
         var fileNames = [];
         folderToRemove.children().last().children().each(function(index) {
-            fileNames.push($(this).find('.file-name').first().text());
+            fileNames.push(getFileName($(this)));
         });
         if (fileNames.indexOf(fileName) > -1) {
             $('.new-file-input').css('box-shadow', 'inset 0px -1px 0px 0px #d61f1f');
             $('.new-file-input').focus();
         } else {
-            console.log(folderContextMenuName);
             var dirEntry = getEntry(folderContextMenuName, folderContextMenuPath, false, true);
             dirEntry.getFile(fileName, {
                 create: true,
@@ -2302,9 +2365,13 @@ $(document).ready(function() {
                 $('.folder').removeClass('active-folder');
                 $('.file').removeClass('active-file');
                 $('.file').css('box-shadow', 'none');
+                if (getMatIcons(folderToRemove).first().text() == 'keyboard_arrow_right') {
+                    folderToRemove.click();
+                }
+                $('.folder').removeClass('active-folder');
                 folderToRemove.children().last().append(div);
                 setMaterialPadding(folderToRemove.children().last().children().last());
-                closeNewFileDialog();
+                closeDialog('.new-file-dialogue');
             });
         }
     });
@@ -2313,8 +2380,8 @@ $(document).ready(function() {
 
     function checkTabs(name, path) {
         path = cleanPath(path);
-        for (var t = 0; t < $('.tab').length; t++) {
-            if ($('.tab').eq(t).attr('path') == path && $('.tab').eq(t).find('.title').val() == name) {
+        for (var t = 0; t < tab().length; t++) {
+            if (tab(t).attr('path') == path && tab(t).find('.title').val() == name) {
                 editIndex = t;
                 return true;
             }
@@ -2324,22 +2391,22 @@ $(document).ready(function() {
     $('.remove-buttons .remove-yes').click(function() {
         projectFileEntry = getEntry(contextMenuName, contextMenuPath, true, false);
         if (checkTabs(contextMenuName, projectFileEntry.fullPath) === true) {
-            closeTab($('.tab').eq(editIndex).find('.close'));
+            closeTab(tab(editIndex).find('.close'));
             projectFileEntry.remove(function() {
                 fileToRemove.remove();
-                closeRemoveDialog();
+                closeDialog('.remove-dialogue');
                 focusEditor();
             });
         } else {
             projectFileEntry.remove(function() {
                 fileToRemove.remove();
-                closeRemoveDialog();
+                closeDialog('.remove-dialogue');
                 focusEditor();
             });
         }
     });
     $('.remove-buttons .remove-no').click(function() {
-        closeRemoveDialog();
+        closeDialog('.remove-dialogue');
         focusEditor();
     });
 
@@ -2362,12 +2429,12 @@ $(document).ready(function() {
         $('.active .title').val(name);
     }
 
-    function getFileName() {
+    function getTabName() {
         return $('.active .title').val();
     }
 
     function createDataAttr(name) {
-        $('.active').attr('data', name);
+        getActiveTab().attr('data', name);
     }
 
     function exportToFileEntry(fileEntry) {
@@ -2376,7 +2443,7 @@ $(document).ready(function() {
         } else {
             chrome.fileSystem.getWritableEntry(fileEntry, function(writableFileEntry) {
                 writableFileEntry.createWriter(function(fileWriter) {
-                    var contents = editor[$('.active').index()].getDoc().getValue();
+                    var contents = getEditor().getDoc().getValue();
                     var blob = new Blob([contents]);
                     var truncated = false;
                     fileWriter.onwriteend = function(e) {
@@ -2393,13 +2460,13 @@ $(document).ready(function() {
                     var fileName = writableFileEntry.name;
                     setFileName(fileName);
                     $('.active input').attr('readonly', true);
-                    fileDirs[$('.active').index()] = writableFileEntry;
-                    if ($('.active').attr('data') === undefined || $('.active').attr('data') === false || $('.active').attr('data') === '') {
+                    fileDirs[getActiveTab().index()] = writableFileEntry;
+                    if (getActiveTab().attr('data') === undefined || getActiveTab().attr('data') === false || getActiveTab().attr('data') === '') {
                         createDataAttr(fileName);
                     } else {}
                     $('.active .close').text('close');
                     $('.active .close').removeClass('edit');
-                    $('.active').click();
+                    getActiveTab().click();
                     if (yesClicked === true) {
                         closeTab(closedTab);
                         yesClicked = false;
@@ -2410,7 +2477,7 @@ $(document).ready(function() {
     }
 
     function ExportToDisk() {
-        var name = getFileName();
+        var name = getTabName();
         chrome.fileSystem.chooseEntry({
             type: 'saveFile',
             suggestedName: name,
@@ -2418,11 +2485,11 @@ $(document).ready(function() {
         }, exportToFileEntry);
     }
     $('.save').click(function() {
-        savedFileEntry = fileDirs[$('.active').index()];
+        savedFileEntry = fileDirs[getActiveTab().index()];
         if (savedFileEntry) {
             exportToFileEntry(savedFileEntry);
         } else {
-            var name = getFileName();
+            var name = getTabName();
             chrome.fileSystem.chooseEntry({
                 type: 'saveFile',
                 suggestedName: name,
@@ -2435,7 +2502,7 @@ $(document).ready(function() {
     });
 
     $('.tidy-up').click(function() {
-        var text = editor[$('.active').index()].getValue();
+        var text = getEditor().getValue();
         var beautified;
         if ($('.active .title').val().indexOf('.html') > -1) {
             beautified = html_beautify(text, {
@@ -2454,7 +2521,7 @@ $(document).ready(function() {
                 indent_size: config.tabSize
             });
         }
-        editor[$('.active').index()].setValue(beautified);
+        getEditor().setValue(beautified);
     });
     //drag and drop
     var dnd = new DnDFileController('body', function(data) {
@@ -2470,7 +2537,7 @@ $(document).ready(function() {
     //change modes automatically
     //based on file name
     function changeMode() {
-        var val = getFileName(),
+        var val = getTabName(),
             m, mode, spec;
         if (m = /.+\.([^.]+)$/.exec(val)) {
             var info = CodeMirror.findModeByExtension(m[1]);
@@ -2488,24 +2555,24 @@ $(document).ready(function() {
             mode = spec = val;
         }
         if (mode) {
-            editor[$('.active').index()].setOption('mode', spec);
-            CodeMirror.autoLoadMode(editor[$('.active').index()], mode);
+            getEditor().setOption('mode', spec);
+            CodeMirror.autoLoadMode(getEditor(), mode);
         } else {}
     }
 
     function resizeTabs() {
-        var tabConWidth = $('.tabs').width(),
-            amountOfTabs = $('.tab').length,
+        var tabConWidth = tabContainer().width(),
+            amountOfTabs = tab().length,
             tabWidth = tabConWidth / amountOfTabs;
         if (tabWidth > 200) {
             tabWidth = 200;
         }
-        $('.tab').css({
+        tab().css({
             width: tabWidth + 'px'
         });
     }
     $(window).resize(function() {
-        var width = $('.sidebar').width();
+        var width = sideBar().width();
         calcWidth(width);
         resizeTabs();
 
@@ -2527,13 +2594,13 @@ $(document).ready(function() {
             marginTop: '0'
         });
         $('.menu').css('margin-top', '15px');
-        $('.sidebar').css('height', '100%');
+        sideBar().css('height', '100%');
         if ($('.search-container').is(':visible')) {
-            $('.workspace').css('height', 'calc(100% - 150px)');
+            workSpace().css('height', 'calc(100% - 150px)');
         } else {
-            $('.workspace').css('height', 'calc(100% - 50px)');
+            workSpace().css('height', 'calc(100% - 50px)');
         }
-        $('.workspace').css('margin-top', '50px');
+        workSpace().css('margin-top', '50px');
     }
 
     function undoFullscreen() {
@@ -2544,13 +2611,13 @@ $(document).ready(function() {
             marginTop: '30px'
         });
         $('.menu').css('margin-top', '45px');
-        $('.sidebar').css('height', 'calc(100% - 30px)');
+        sideBar().css('height', 'calc(100% - 30px)');
         if ($('.search-container').is(':visible')) {
-            $('.workspace').css('height', 'calc(100% - 180px)');
+            workSpace().css('height', 'calc(100% - 180px)');
         } else {
-            $('.workspace').css('height', 'calc(100% - 80px)');
+            workSpace().css('height', 'calc(100% - 80px)');
         }
-        $('.workspace').css('margin-top', '80px');
+        workSpace().css('margin-top', '80px');
     }
     $('.started-button').click(function() {
         $('.getting-started').stop().animate({
@@ -2572,7 +2639,7 @@ $(document).ready(function() {
     }
     //save & load data or 'remember' tabs and settings
     function setData(textArray, tabArray, editArray, installed, activeIndex, sideWidth, projectSize, projectAmount) {
-        chrome.storage.local.set({
+        setStorage({
             data: textArray,
             tabs: tabArray,
             state: editArray,
@@ -2598,7 +2665,7 @@ $(document).ready(function() {
         } else {
             newProjectDir = chrome.fileSystem.retainEntry(projectDir);
         }
-        chrome.storage.local.set({
+        setStorage({
             chosenFiles: key,
             chosenDirs: rootDirs,
             chosenDir: newProjectDir
@@ -2606,50 +2673,52 @@ $(document).ready(function() {
     }
 
     function saveData(callback) {
-        tabArray = [];
-        textArray = [];
-        editArray = [];
-        for (var i = 0; i < $('.tab').length; i++) {
-            var index = i;
-            var text = editor[index].getValue();
-            var state = $('.tab').eq(index).find('.material-icons').text();
-            var projectAmount = rootDirs.length;
-            var remaining = index;
-            textArray[index] = text;
-            tabArray[index] = {
-                name: $('.tab').eq(index).find('.title').val(),
-                path: $('.tab').eq(index).attr('path'),
-                dataAttr: $('.tab').eq(index).attr('data'),
-                isReadOnly: $('.tab').eq(index).find('input').attr('readonly')
-            };
-            editArray[index] = state;
-            var activeIndex = $('.active').index(),
-                sideWidth = $('.sidebar').width();
-            if (remaining === $('.tab').length - 1) {
-                var projectSize = 0;
-                if (rootDirs.length === 0) {
-                    setData(textArray, tabArray, editArray, installed, activeIndex, sideWidth, projectSize, projectAmount);
-                } else {
-                    for (var g = 0; g < rootDirs.length; g++) {
-                        chrome.fileSystem.restoreEntry(rootDirs[g], function(entry) {
-                            entry.getMetadata(function(metadata) {
-                                projectSize += Math.ceil(metadata.size);
-                                setData(textArray, tabArray, editArray, installed, activeIndex, sideWidth, projectSize, projectAmount);
+        if (!sorting) {
+            tabArray = [];
+            textArray = [];
+            editArray = [];
+            for (var i = 0; i < tab().length; i++) {
+                var index = i;
+                var text = getEditor(index).getValue();
+                var state = getMatIcons(tab(index)).text();
+                var projectAmount = rootDirs.length;
+                var remaining = index;
+                textArray[index] = text;
+                tabArray[index] = {
+                    name: tab(index).find('.title').val(),
+                    path: tab(index).attr('path'),
+                    dataAttr: tab(index).attr('data'),
+                    isReadOnly: tab(index).find('input').attr('readonly')
+                };
+                editArray[index] = state;
+                var activeIndex = getActiveTab().index(),
+                    sideWidth = sideBar().width();
+                if (remaining === tab().length - 1) {
+                    var projectSize = 0;
+                    if (rootDirs.length === 0) {
+                        setData(textArray, tabArray, editArray, installed, activeIndex, sideWidth, projectSize, projectAmount);
+                    } else {
+                        for (var g = 0; g < rootDirs.length; g++) {
+                            chrome.fileSystem.restoreEntry(rootDirs[g], function(entry) {
+                                entry.getMetadata(function(metadata) {
+                                    projectSize += Math.ceil(metadata.size);
+                                    setData(textArray, tabArray, editArray, installed, activeIndex, sideWidth, projectSize, projectAmount);
+                                });
                             });
-                        });
+                        }
                     }
                 }
             }
-        }
-        if (!callback) {} else {
-            callback();
+            if (!callback) {} else {
+                callback();
+            }
         }
     }
 
     function calcWidth(sideBarWidth) {
-        $('.sidebar').width(sideBarWidth);
-        $('.tabs').width($(window).width() - 70 - sideBarWidth);
-        $('.workspace').width($(window).width() - sideBarWidth);
+        sideBar().width(sideBarWidth);
+        tabContainer().width($(window).width() - 70 - sideBarWidth);
+        workSpace().width($(window).width() - sideBarWidth);
         $('.search-container').width($(window).width() - sideBarWidth);
     }
 
@@ -2667,7 +2736,7 @@ $(document).ready(function() {
     }
 
     function loadData(launchData) {
-        chrome.storage.local.get({
+        getStorage({
             data: 'textArray',
             tabs: 'tabArray',
             state: 'editArray',
@@ -2720,24 +2789,24 @@ $(document).ready(function() {
                 }
                 for (var a = 0; a < data.length; a++) {
                     newTab();
-                    editor[a] = CodeMirror.fromTextArea(document.getElementById('textarea' + Number($('.tabs').children().last().attr('id').replace('tab', ''))), config);
-                    editor[a].getDoc().setValue(data[a]);
-                    editor[a].getDoc().clearHistory();
+                    setEditor(a, CodeMirror.fromTextArea(document.getElementById('textarea' + Number(replaceTabID(tabContainer().children().last()))), config));
+                    getEditor(a).getDoc().setValue(data[a]);
+                    getEditor(a).getDoc().clearHistory();
                     autoSave(a);
-                    $('.tab').eq(a).find('.title').val(tabs[a].name);
-                    $('.tab').eq(a).find('.title').attr('readonly', tabs[a].isReadOnly);
-                    $('.tab').eq(a).attr('data', tabs[a].dataAttr);
-                    $('.tab').eq(a).attr('path', tabs[a].path);
-                    if ($('.tab').eq(a).attr('data') === '') {
+                    tab(a).find('.title').val(tabs[a].name);
+                    tab(a).find('.title').attr('readonly', tabs[a].isReadOnly);
+                    tab(a).attr('data', tabs[a].dataAttr);
+                    tab(a).attr('path', tabs[a].path);
+                    if (tab(a).attr('data') === '') {
                         fileDirs[a] = '';
                     }
                     if (state[a] == 'fiber_manual_record') {
-                        $('.tab').eq(a).find('.material-icons').addClass('edit');
+                        getMatIcons(tab(a)).addClass('edit');
                     }
-                    $('.tab').eq(a).find('.material-icons').text(state[a]);
+                    getMatIcons(tab(a)).text(state[a]);
                     var remaining = data.length - 1;
                     if (remaining === a) {
-                        chrome.storage.local.get({
+                        getStorage({
                             chosenFiles: 'key',
                             chosenDirs: 'rootDirs',
                             chosenDir: 'newProjectDir'
@@ -2776,9 +2845,9 @@ $(document).ready(function() {
                         calcWidth(sideBarWidth);
                         setTimeout(function() {
                             openLaunchData();
-                            $('.projects').append(docFrag.children);
+                            projects().append(docFrag.children);
                             sortDirect();
-                            $('.tab').eq(actv).click();
+                            tab(actv).click();
                             loadPrefs();
                             resizeTabs();
                             refreshEditors();

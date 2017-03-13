@@ -8,7 +8,7 @@
   color: rgb(83,127,126);
   border: none;
 }
-.cm-s-purplenight .CodeMirror-guttermarker, .cm-s-purplenight .CodeMirror-guttermarker-subtle, .cm-s-purplenight .CodeMirror-linenumber { color: #545461; }
+.cm-s-purplenight .CodeMirror-guttermarker, .cm-s-purplenight .CodeMirror-guttermarker-subtle, .cm-s-purplenight .CodeMirror-linenumber { color: #5f697d; }
 .cm-s-purplenight .CodeMirror-cursor { border-left: 1px solid #516cbc; }
 .cm-s-purplenight div.CodeMirror-selected { background: rgba(255, 255, 255, 0.15); }
 .cm-s-purplenight.CodeMirror-focused div.CodeMirror-selected { background: rgba(255, 255, 255, 0.10); }

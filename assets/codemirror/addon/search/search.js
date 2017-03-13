@@ -56,7 +56,8 @@
 
   function dialog(cm, text, shortText, deflt, f) {
     if (cm.openDialog) cm.openDialog(text, f, {value: deflt, selectValueOnOpen: true});
-    else f(prompt(shortText, deflt));
+    //window.prompt() is not available in chrome apps
+    //else f(prompt(shortText, deflt));
   }
 
   function confirmDialog(cm, text, shortText, fs) {

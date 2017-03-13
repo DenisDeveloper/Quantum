@@ -120,15 +120,15 @@
 }
 .ui-resizable-e {
 	cursor: e-resize;
-	width: 15px;
-	right: -5px;
+	width: 8px;
+	right: 0px;
 	top: 0;
 	height: 100%;
 }
 .ui-resizable-w {
 	cursor: w-resize;
-	width: 15px;
-	left: -5px;
+	width: 8px;
+	left: 0px;
 	top: 0;
 	height: 100%;
 }
