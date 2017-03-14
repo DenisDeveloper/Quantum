@@ -1,4 +1,4 @@
-//Quantum v4.9
+//Quantum v5.0
 //Author: Carlos E. Santos
 $(document).ready(function() {
     var loadTexts = ["Please wait...a few bits tried to escape, but we caught them",
@@ -153,6 +153,22 @@ $(document).ready(function() {
         return $('.tabs');
     }
 
+    function newButton() {
+        return $('.new');
+    }
+
+    function openButton() {
+        return $('.open');
+    }
+
+    function openDirButton() {
+        return $('.open-dir');
+    }
+
+    function newProject() {
+        return $('.add-newproject');
+    }
+
     function tab(index) {
         if (isInteger(index)) {
             return $('.tab').eq(index);
@@ -181,7 +197,7 @@ $(document).ready(function() {
     //dropdown
     function openDropDown(dropdown) {
         var height = dropdown.children().length;
-        height = height * 40 + 'px';
+        	height = height * 40 + 'px';
         if (dropdown.is(':visible')) {
             dropdown.stop().animate({
                 height: '0px'
@@ -196,9 +212,9 @@ $(document).ready(function() {
     }
     $(document).on('click', '.selector-container', function() {
         var thisDropdown = $(this).attr('class').split(' ');
-        thisDropdown = thisDropdown[thisDropdown.length - 1];
+        	thisDropdown = thisDropdown[thisDropdown.length - 1];
         var realDropdown = thisDropdown.replace('selector-', '');
-        realDropdown = $('.dropdown-' + realDropdown);
+        	realDropdown = $('.dropdown-' + realDropdown);
 
         openDropDown(realDropdown);
 
@@ -325,6 +341,21 @@ $(document).ready(function() {
         }
     }
 
+    function resetFolders() {
+        $('.folder').removeClass('active-folder');
+        $('.file').removeClass('active-file');
+    }
+
+    function selectThis(element) {
+        if (element.hasClass('file')) {
+            resetFolders();
+            element.addClass('active-file');
+        } else {
+            resetFolders();
+            element.addClass('active-folder');
+        }
+    }
+
     function setCheckBox(value, checkbox) {
         if (value === false || undefined) {
             $(checkbox).removeClass('active-checkbox');
@@ -401,6 +432,23 @@ $(document).ready(function() {
     function setConfig(option, value) {
         config[option] = value;
     }
+    
+    function setFileDir(index, value){
+        fileDirs[index] = value;
+    }
+    
+    function getFileDir(index){
+        return fileDirs[index];
+    }
+    
+    function moveArray(arr, a, b){
+        arr.move(a, b);
+    }
+    
+    function removeArrayEntry(arr, index){
+        arr.splice(index, 1);
+    }
+    
     $('.settings').scroll(function() {
         var scroll = $(this).scrollTop();
         if (scroll !== 0) {
@@ -531,9 +579,10 @@ $(document).ready(function() {
                     folderUsed = folderToRemove.parent().parent();
                 }
             }
-            var dirName = getFolderName(folderUsed);
-            var dirPath = folderUsed.attr('path');
-            var dirEntry = getEntry(dirName, dirPath, false, true);
+            var dirName = getFolderName(folderUsed),
+                dirPath = folderUsed.attr('path'),
+                dirEntry = getEntry(dirName, dirPath, false, true);
+            
             dirEntry.getFile(name, {
                 create: true,
                 exclusive: true
@@ -561,8 +610,8 @@ $(document).ready(function() {
         });
     }
     $(document).on('click', '.dropdown .library', function() {
-        var name = $(this).text();
-        var folderUsed;
+        var name = $(this).text(),
+            folderUsed;
         if (!folderToRemove) {
             folderUsed = projects().children().first();
         } else {
@@ -661,7 +710,7 @@ $(document).ready(function() {
         if ($('.dialogue').is(':visible')) {
             closeSaveBox();
         } else {}
-        if ($('.dialog').is('visible')) {
+        if ($('.dialog').is(':visible')) {
             closeDialog('.dialog');
         }
         if (settings().is(':visible')) {
@@ -720,8 +769,8 @@ $(document).ready(function() {
                 codeMirror().eq(oldIndex).insertAfter(codeMirror().eq(newIndex));
                 $('#textarea' + thisID).insertBefore(codeMirror().eq(newIndex));
             }
-            editor.move(oldIndex, newIndex);
-            fileDirs.move(oldIndex, newIndex);
+            moveArray(editor, oldIndex, newIndex);
+            moveArray(fileDirs, oldIndex, newIndex);
             focusEditor();
         }
     }).disableSelection();
@@ -760,14 +809,14 @@ $(document).ready(function() {
         tab().removeClass('active');
         tab().removeClass('active-' + config.theme);
         tabContainer().append('<div id="tab' + index + '"class="tab active active-' + config.theme + '"><input class="title"/><span class="close material-icons">close</span></div>');
-        setFileName('untitled.txt');
+        setTabName('untitled.txt');
         workSpace().append('<textarea id="textarea' + index + '"></textarea>');
         getActiveTab().attr('id', 'tab' + index);
         codeMirror().hide();
         resizeTabs();
         $('#textarea' + index).show();
         createDataAttr('');
-        fileDirs[index] = '';
+        setFileDir(index, '');
     }
 
     function reloadDirEntries(entry) {
@@ -783,8 +832,8 @@ $(document).ready(function() {
         newTab();
         var index = getActiveTab().index();
         setEditor(index, CodeMirror.fromTextArea(document.getElementById('textarea' + index), config));
-        setFileName('untitled.txt');
-        fileDirs[index] = '';
+        setTabName('untitled.txt');
+        setFileDir(index, '');
         setTimeout(function() {
             getActiveTab().click();
             autoSave(index);
@@ -824,10 +873,8 @@ $(document).ready(function() {
             codeMirror().hide();
             codeMirror().eq(getActiveTab().index()).show();
             changeMode();
-            savedFileEntry = fileDirs[$(this).index()];
-            $('.folder').removeClass('active-folder');
-            $('.file').removeClass('active-file');
-            $('.file[path="' + $(this).attr('path') + '"]').addClass('active-file');
+            savedFileEntry = getFileDir($(this).index());
+            selectThis($('.file[path="' + $(this).attr('path') + '"]'));
             getEditor().refresh();
             focusEditor();
         }
@@ -844,20 +891,20 @@ $(document).ready(function() {
 
         } else {
             var entry = getEntry(fileName, path, true, false, false);
-        }
-        if (entry === undefined) {
-            entry = getEntry(fileName, path, false, false, true, true);
             if (entry === undefined) {
+                entry = getEntry(fileName, path, false, false, true, true);
+                if (entry === undefined) {
 
+                } else {
+                    chrome.fileSystem.getDisplayPath(entry, function(displayPath) {
+                        path = displayPath;
+                    });
+                }
             } else {
                 chrome.fileSystem.getDisplayPath(entry, function(displayPath) {
                     path = displayPath;
                 });
             }
-        } else {
-            chrome.fileSystem.getDisplayPath(entry, function(displayPath) {
-                path = displayPath;
-            });
         }
         tooltipTimer = setTimeout(function() {
             if (tab.attr('path') === undefined) {} else {
@@ -936,8 +983,8 @@ $(document).ready(function() {
             tabLength = tab().length;
         $('#' + textID).remove();
         $('.CodeMirror:eq(' + tabClicked.index() + ')').remove();
-        editor.splice(tabIndex, 1);
-        fileDirs.splice(tabIndex, 1);
+        removeArrayEntry(editor, tabIndex);
+        removeArrayEntry(fileDirs, tabIndex);
         closedTab.parent().remove();
         if (prefs === undefined) {
             resetPrefs();
@@ -1032,16 +1079,12 @@ $(document).ready(function() {
     function setSearch(input) {
         $('.search-bar').attr('searchNext', input);
     }
+
     $('.search-bar').keyup(function() {
-        text = $(this).val();
-        cm = getEditor();
-        state = getSearchState(cm);
-        setSearch('false');
-        startSearch(cm, state, text);
-        doSearch(cm, false);
-        if ($('.cm-searching').length > 0 || text === '') {
-            $(this).css('box-shadow', 'inset 0px -1px 0px 0px rgba(0, 0, 0, 0.2)');
-        }
+        $(this).css('box-shadow', 'inset 0px -1px 0px 0px rgba(0, 0, 0, 0.2)');
+    });
+    $('.search-bar').focus(function(){
+        $(this).css('box-shadow', 'inset 0px -1px 0px 0px rgba(0, 0, 0, 0.2)');
     });
     $('.find_next').click(function() {
         text = $('.search-bar').val();
@@ -1107,11 +1150,11 @@ $(document).ready(function() {
         //new tab
         if (e.ctrlKey && e.keyCode == 78 || e.metaKey && e.keyCode == 78) {
             e.preventDefault();
-            $('.new').click();
+            newButton().click();
         }
         //open file(s)
         if (e.ctrlKey && e.keyCode == 79 || e.metaKey && e.keyCode == 79) {
-            $('.open').click();
+            openButton().click();
         }
         //open prefs
         if (e.ctrlKey && e.keyCode == 80 || e.metaKey && e.keyCode == 80) {
@@ -1219,7 +1262,7 @@ $(document).ready(function() {
         closeOverflow();
     });
     //menu functionality
-    $('.new').click(function() {
+    newButton().click(function() {
         newTab();
         var index = getActiveTab().index();
         editor[index] = CodeMirror.fromTextArea(document.getElementById('textarea' + Number(tabContainer().children().last().attr('id').replace('tab', ''))), config);
@@ -1244,7 +1287,7 @@ $(document).ready(function() {
                 reader.onload = function(e) {
                     var text = e.target.result;
                     newTab();
-                    setFileName(fileEntry.name);
+                    setTabName(fileEntry.name);
                     var path = cleanPath(fileEntry);
                     if (fromDir === false) {
                         createPathAttr(path);
@@ -1257,7 +1300,7 @@ $(document).ready(function() {
                     var newIndex = replaceTabID(getActiveTab());
                     var index = Number(newIndex);
                     var actIndex = getActiveTab().index();
-                    fileDirs[actIndex] = fileEntry;
+                    setFileDir(actIndex, fileEntry);
                     setEditor(actIndex, CodeMirror.fromTextArea(document.getElementById('textarea' + index), config));
                     getEditor(actIndex).getDoc().setValue(text);
                     getEditor(actIndex).getDoc().clearHistory();
@@ -1273,7 +1316,7 @@ $(document).ready(function() {
             });
         });
     }
-    $('.open').click(function() {
+    openButton().click(function() {
         chrome.fileSystem.chooseEntry({
             acceptsMultiple: true
         }, function(fileEntries) {
@@ -1319,9 +1362,9 @@ $(document).ready(function() {
             $(this).hide();
         });
     }
-    $('.add-newproject').click(function() {
+    newProject().click(function() {
         openProjectDialog();
-        resetInput('.new-project-input', '')
+        resetInput('.new-project-input', '');
     });
     $('.new-project-cancel').click(function() {
         closeProjectDialog();
@@ -1370,9 +1413,9 @@ $(document).ready(function() {
             directories.push({
                 entry: dirEntry
             });
-            var path = cleanPath(dirEntry);
-            var div = document.createElement('div');
-            var thisName = dirEntry.name;
+            var path = cleanPath(dirEntry),
+                div = document.createElement('div'),
+                thisName = dirEntry.name;
             thisName = replaceName(thisName);
             div.className = thisName + ' folder';
             div.setAttribute('path', path);
@@ -1383,7 +1426,7 @@ $(document).ready(function() {
             focusEditor();
         });
     });
-    $(document).on('keyup', '.dialog-input:not(.rename-file-input, .rename-folder-input)', function(e) {
+    $('.dialog-input:not(.rename-file-input, .rename-folder-input)').keyup(function(e) {
         var folderName = $(this).val();
         if (folderName === '') {
             folderName = 'untitled';
@@ -1456,9 +1499,9 @@ $(document).ready(function() {
     function displayDataDir(x) {
         var thisName = directories[x].entry.name;
         var path = directories[x].entry.fullPath;
-        path = cleanPath(directories[x].entry);
+        	path = cleanPath(directories[x].entry);
         var newPath = directories[x].entry.fullPath;
-        newPath = cleanPath(directories[x].entry);
+        	newPath = cleanPath(directories[x].entry);
         //what the fuck am I doing with my life.
         path = splitAndReturn(path, '/', 0);
         //adjust path for classes
@@ -1509,9 +1552,10 @@ $(document).ready(function() {
     function displayDataFile(y) {
         var name = files[y].entry.name;
         var path = files[y].entry.fullPath;
-        path = cleanPath(files[y].entry);
+        	path = cleanPath(files[y].entry);
         var newpath = files[y].entry.fullPath;
-        newpath = cleanPath(files[y].entry);
+        	newpath = cleanPath(files[y].entry);
+
         path = splitAndReturn(path, '/', 0);
         //adjust path for classes
         path.forEach(function(val, index, array) {
@@ -1608,7 +1652,7 @@ $(document).ready(function() {
             }, time);
         });
     }
-    $('.open-dir').click(function() {
+    openDirButton().click(function() {
         chrome.fileSystem.chooseEntry({
             type: 'openDirectory'
         }, function(dirEntry) {
@@ -1675,9 +1719,7 @@ $(document).ready(function() {
     }
     $(document).on('click', '.projects .folder', function(e) {
         e.stopPropagation();
-        $('.file').removeClass('active-file');
-        $('.folder').removeClass('active-folder');
-        $(this).addClass('active-folder');
+        selectThis($(this));
         if ($(this).children('ul').is(':visible')) {
             $(this).children('ul').hide();
             $(this).children('.material-icons').first().text('keyboard_arrow_right');
@@ -1738,19 +1780,20 @@ $(document).ready(function() {
         e.stopPropagation();
         if (e.handled !== true) {
             e.handled = true;
-            $('.folder').removeClass('active-folder');
-            $('.file').removeClass('active-file');
-            $(this).addClass('active-file');
+            selectThis($(this));
             var temp = [];
             var thisName = getFileName($(this)),
                 thisPath = $(this).attr('path'),
                 projectFileEntry = getEntry(thisName, thisPath, true, false);
-            if (checkTabs(thisName, thisPath) === true) {
-                tab(editIndex).click();
+
+            var index = checkTabs(thisName, thisPath);
+            if (isInteger(index)) {
+                tab(index).click();
             } else {
                 temp.push(projectFileEntry);
                 openFiles(temp, true);
             }
+            fileToRemove = $(this);
         }
         contextMenuOff();
     });
@@ -1804,6 +1847,7 @@ $(document).ready(function() {
             $(this).hide();
         });
     }
+
     var contextMenuName,
         contextMenuPath,
         fileToRemove,
@@ -1905,6 +1949,7 @@ $(document).ready(function() {
         contextMenuName = removeTitle;
         contextMenuPath = $(this).attr('path');
         fileToRemove = $(this);
+        selectThis($(this));
         contextMenuOn(e);
     });
     $('.folder-contextmenu .folder-rename').click(function() {
@@ -1917,33 +1962,30 @@ $(document).ready(function() {
         focusEditor();
     });
 
+    function getPathUntil(path, token) {
+        return path.substring(path.lastIndexOf(token), 0);
+    }
+
     function removeChildDirectories(directory) {
         var directoryFolders = jQuery.grep(directories, function(elem) {
-            var thisRootDir = splitAndReturn(elem.entry.fullPath, '/', 0);
-            thisRootDir.shift();
-            thisRootDir = thisRootDir[0];
-            var thatRootDir = splitAndReturn(directory.fullPath, '/', 0);
-            thatRootDir.shift();
-            thatRootDir = thatRootDir[0];
-            return (thisRootDir == thatRootDir);
+            var thisPath = getPathUntil(elem.entry.fullPath, directory.name);
+            var thatPath = getPathUntil(directory.fullPath, directory.name);
+            return (thisPath == thatPath);
         });
         var directoryFiles = jQuery.grep(files, function(elem) {
-            var thisRootDir = splitAndReturn(elem.entry.fullPath, '/', 0);
-            thisRootDir.shift();
-            thisRootDir = thisRootDir[0];
-            var thatRootDir = splitAndReturn(directory.fullPath, '/', 0);
-            thatRootDir.shift();
-            thatRootDir = thatRootDir[0];
-            return (thisRootDir == thatRootDir);
+            var thisPath = getPathUntil(elem.entry.fullPath, directory.name + '/');
+            var thatPath = getPathUntil(directory.fullPath, directory.name);
+            return (thisPath == thatPath);
         });
+        console.log(directoryFiles);
         if (directoryFolders.length !== 0) {
             for (var j = 0; j < directoryFolders.length; j++) {
-                directories.splice(directories.indexOf(directoryFolders[j]), 1);
+                directories.splice(directories.lastIndexOf(directoryFolders[j]), 1);
             }
         }
         if (directoryFiles.length !== 0) {
             for (var g = 0; g < directoryFiles.length; g++) {
-                files.splice(files.indexOf(directoryFiles[g]), 1);
+                files.splice(files.lastIndexOf(directoryFiles[g]), 1);
             }
         }
     }
@@ -1975,20 +2017,24 @@ $(document).ready(function() {
     }
 
     function assignEntries(folder, oldName, newName) {
-        $(folder + ' div:not(.material-icons)').each(function(index) {
-            var path = $(this).attr('path');
-            $(this).attr('path', path.replace('/' + oldName + '/', '/' + newName + '/'));
-            if ($(this).hasClass('file')) {
-                var fileName = getFileName($(this));
-                if (checkTabs(fileName, path)) {
-                    tab(editIndex).attr('path', path.replace('/' + oldName + '/', '/' + newName + '/'));
-                    var newPath = tab(editIndex).attr('path'),
+        $(folder).children().each(function() {
+            var child = $(this);
+            var path = child.attr('path');
+            var newPath = path.replace('/' + oldName + '/', '/' + newName + '/');
+            child.attr('path', newPath);
+            if (child.hasClass('file')) {
+                var fileName = getFileName(child);
+                var index = checkTabs(fileName, path);
+                if (isInteger(index)) {
+                    tab(index).attr('path', newPath);
+                    var tabPath = tab(index).attr('path'),
                         entry = getEntry(fileName, newPath, true, false);
-                    fileDirs[editIndex] = entry;
+                    setFileDir(index, entry);
                 }
             }
         });
     }
+
     $('.rename-folder-create').click(function() {
         var newFolderName = $('.rename-folder-input').val();
         if (newFolderName === '') {
@@ -2017,11 +2063,9 @@ $(document).ready(function() {
                 directory.moveTo(parentEntry, newFolderName, function(newFolderEntry) {
                     var nameForClass = newFolderEntry.name;
                     nameForClass = replaceName(nameForClass);
-                    directories[directoryIndex] = {
-                        entry: newFolderEntry
-                    };
                     var path = cleanPath(newFolderEntry);
-                    folderToRemove.attr('class', nameForClass + ' folder');
+                    resetFolders();
+                    folderToRemove.attr('class', nameForClass + ' folder active-folder');
                     folderToRemove.attr('path', path);
                     folderToRemove.children().last().attr('class', nameForClass + 'ul');
                     setFolderName(folderToRemove, newFolderName);
@@ -2029,6 +2073,9 @@ $(document).ready(function() {
                     reloadLoadedEntries(newFolderEntry, function() {
                         assignEntries('.' + nameForClass + 'ul', directory.name, newFolderEntry.name);
                     });
+                    directories[directoryIndex] = {
+                        entry: newFolderEntry
+                    };
                     closeDialog('.rename-folder-dialogue');
                     focusEditor();
                 });
@@ -2041,7 +2088,7 @@ $(document).ready(function() {
         resetInput('.rename-file-input', contextMenuName);
     });
 
-    function rename(cwd, src, newName, oldFileEntry, fileToRemove, isTab) {
+    function rename(cwd, src, newName, oldFileEntry, fileToRemove, isTab, index) {
         cwd.getFile(src, {}, function(fileEntry) {
             fileEntry.moveTo(cwd, newName, function(newFileEntry) {
                 var nameForClass = replaceName(newFileEntry.name);
@@ -2056,9 +2103,9 @@ $(document).ready(function() {
                 getMatIcons(fileToRemove).text(material);
                 setFileName(fileToRemove, newFileEntry.name);
                 oldFileEntry.entry = newFileEntry;
-                if (isTab) {
-                    changeTab(editIndex, newName, path);
-                    fileDirs[editIndex] = newFileEntry;
+                if (isTab && index) {
+                    changeTab(index, newName, path);
+                    setFileDir(index, newFileEntry);
                     changeMode();
                 }
             }, function(e) {
@@ -2101,8 +2148,9 @@ $(document).ready(function() {
 
             var projectDirEntry = getEntry(parentName, parentPath, false, true),
                 projectFileEntry = getEntry(contextMenuName, contextMenuPath, true, false, true);
-            if (checkTabs(contextMenuName, projectFileEntry.entry.fullPath) === true) {
-                rename(projectDirEntry, projectFileEntry.entry.name, newName, projectFileEntry, fileToRemove, true);
+            var index = checkTabs(contextMenuName, projectFileEntry.entry.fullPath);
+            if (isInteger(index)) {
+                rename(projectDirEntry, projectFileEntry.entry.name, newName, projectFileEntry, fileToRemove, true, index);
             } else {
                 rename(projectDirEntry, projectFileEntry.entry.name, newName, projectFileEntry, fileToRemove, false);
             }
@@ -2128,6 +2176,7 @@ $(document).ready(function() {
         folderToRemove = $(this);
         folderContext(e);
 
+        selectThis($(this));
         var projectChildren = projects().children();
         var path = [];
         projectChildren.each(function() {
@@ -2264,8 +2313,7 @@ $(document).ready(function() {
                 if (getMatIcons(folderToRemove).first().text() == 'keyboard_arrow_right') {
                     folderToRemove.click();
                 }
-                $('.folder').removeClass('active-folder');
-                $('.file').removeClass('active-file');
+                resetFolders();
                 folderToRemove.children().last().append(div);
                 folderToRemove.children().last().children().last().children().last().hide();
                 folderToRemove.children().last().children().last().insertBefore(folderToRemove.children().last().children().first());
@@ -2308,6 +2356,9 @@ $(document).ready(function() {
                     }
                 });
             }
+            if ($('.tab').length === 0) {
+                newButton().click();
+            }
             resizeTabs();
             folderToRemove.remove();
             closeDialog('.folder-remove-dialogue');
@@ -2340,6 +2391,9 @@ $(document).ready(function() {
             $('.new-file-input').css('box-shadow', 'inset 0px -1px 0px 0px #d61f1f');
             $('.new-file-input').focus();
         } else {
+            console.log(folderContextMenuName, folderContextMenuPath);
+            console.log(directories);
+
             var dirEntry = getEntry(folderContextMenuName, folderContextMenuPath, false, true);
             dirEntry.getFile(fileName, {
                 create: true,
@@ -2353,7 +2407,6 @@ $(document).ready(function() {
                 });
                 var name = fileEntry.name;
                 name = replaceName(name);
-                name = name.replace(/\./g, '');
                 savedFileEntry = fileEntry;
                 //create div
                 var div = document.createElement('div');
@@ -2362,13 +2415,10 @@ $(document).ready(function() {
                 div.className = name + ' file active-file';
                 div.setAttribute('path', path);
                 div.innerHTML = material + '<label class="file-name">' + fileEntry.name + '</label>';
-                $('.folder').removeClass('active-folder');
-                $('.file').removeClass('active-file');
-                $('.file').css('box-shadow', 'none');
                 if (getMatIcons(folderToRemove).first().text() == 'keyboard_arrow_right') {
                     folderToRemove.click();
                 }
-                $('.folder').removeClass('active-folder');
+                resetFolders();
                 folderToRemove.children().last().append(div);
                 setMaterialPadding(folderToRemove.children().last().children().last());
                 closeDialog('.new-file-dialogue');
@@ -2376,22 +2426,23 @@ $(document).ready(function() {
         }
     });
 
-    var editIndex;
-
     function checkTabs(name, path) {
         path = cleanPath(path);
-        for (var t = 0; t < tab().length; t++) {
-            if (tab(t).attr('path') == path && tab(t).find('.title').val() == name) {
-                editIndex = t;
-                return true;
+        for (var u = 0; u < tab().length; u++) {
+            var newPath = tab(u).attr('path'),
+                tabName = tab(u).find('input').val();
+            if (newPath == path && tabName == name) {
+                return u;
             }
         }
     }
+
     //remove
     $('.remove-buttons .remove-yes').click(function() {
         projectFileEntry = getEntry(contextMenuName, contextMenuPath, true, false);
-        if (checkTabs(contextMenuName, projectFileEntry.fullPath) === true) {
-            closeTab(tab(editIndex).find('.close'));
+        var index = checkTabs(contextMenuName, projectFileEntry.fullPath);
+        if (isInteger(index)) {
+            closeTab(tab(index).find('.close'));
             projectFileEntry.remove(function() {
                 fileToRemove.remove();
                 closeDialog('.remove-dialogue');
@@ -2425,7 +2476,7 @@ $(document).ready(function() {
         }
     });
 
-    function setFileName(name) {
+    function setTabName(name) {
         $('.active .title').val(name);
     }
 
@@ -2458,9 +2509,9 @@ $(document).ready(function() {
                     fileWriter.write(blob);
 
                     var fileName = writableFileEntry.name;
-                    setFileName(fileName);
+                    setTabName(fileName);
                     $('.active input').attr('readonly', true);
-                    fileDirs[getActiveTab().index()] = writableFileEntry;
+                    setFileDir(getActiveTab().index(), writableFileEntry);
                     if (getActiveTab().attr('data') === undefined || getActiveTab().attr('data') === false || getActiveTab().attr('data') === '') {
                         createDataAttr(fileName);
                     } else {}
@@ -2485,7 +2536,7 @@ $(document).ready(function() {
         }, exportToFileEntry);
     }
     $('.save').click(function() {
-        savedFileEntry = fileDirs[getActiveTab().index()];
+        savedFileEntry = getFileDir(getActiveTab().index());
         if (savedFileEntry) {
             exportToFileEntry(savedFileEntry);
         } else {
@@ -2798,7 +2849,7 @@ $(document).ready(function() {
                     tab(a).attr('data', tabs[a].dataAttr);
                     tab(a).attr('path', tabs[a].path);
                     if (tab(a).attr('data') === '') {
-                        fileDirs[a] = '';
+                        setFileDir(a, '');
                     }
                     if (state[a] == 'fiber_manual_record') {
                         getMatIcons(tab(a)).addClass('edit');
@@ -2818,7 +2869,7 @@ $(document).ready(function() {
                                 chosenFiles.forEach(function(elem, index, array) {
                                     chrome.fileSystem.isRestorable(elem.entry, function(bisRestorable) {
                                         chrome.fileSystem.restoreEntry(elem.entry, function(thisEntry) {
-                                            fileDirs[elem.index] = thisEntry;
+                                            setFileDir(elem.index, thisEntry);
                                         });
                                     });
                                 });
