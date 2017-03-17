@@ -27,6 +27,7 @@ A more detailed description of the themes and fonts available in Quantum are lis
 
 <img src="https://dl2.pushbulletusercontent.com/bpQyDTkHhJRaDnLYze5mMrhZvDOUmv6h/themes.png">
 As with any editor, themes are a crucial part of a user's experience, so when designing Quantum, this was taken into account. Quantum comes with 8 distinctive themes that are sure to appeal to a number of users.
+
 - Birds of Paradise
 - Darkpastel
 - Friendship Bracelet
