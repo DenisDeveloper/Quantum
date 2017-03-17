@@ -9,17 +9,22 @@ Definitely one of the more prominent features available in Quantum is the abilit
 Quantum allows users to open, close, and sort as many tabs as they so desire. Users can also rename their documents by clicking on the title in the tab and using the keyboard to type in a different name.
 ### Libraries
 <img src="https://dl2.pushbulletusercontent.com/y4OvqQhBtUNJWf6JA9Dgon5V0xZn3n8H/libraries.png">
+
 A unique feature to Quantum is the ability to add popular open-source libraries to the current folder directly from the settings panel. Simply select one and, assuming you have an internet connection, Quantum will get the file from the cdnjs.com.
 ### Search
+
 <img src="https://dl2.pushbulletusercontent.com/AUgbhemQdWUQowndx4a7UNflvoRbdAT9/screenshot-5.png">
+
 Full search and replace is already built-in to Quantum out of the box. Type in your search and Quantum scrolls to the first found text that matches your search or highlights your search red if no match has been found. Users can replace text one by one or all at once.
 ### Settings
 <img src="https://dl2.pushbulletusercontent.com/zAyXymocFH4Lpts56izjZ8uweJehJno7/screenshot-3.png">
+
 The settings modal provides 5 key customization options: Themes, Font, Font Size, Tab Size, and Soft Wrap. I wont list all their respective options here as to save space, but they are pretty self-explanatory. These settings were chosen to add a tweakability aspect to Quantum while still incorporating this idea of simplicity that we eagerly strive for.
 
 A more detailed description of the themes and fonts available in Quantum are listed below:
 
 #### Themes
+
 <img src="https://dl2.pushbulletusercontent.com/bpQyDTkHhJRaDnLYze5mMrhZvDOUmv6h/themes.png">
 As with any editor, themes are a crucial part of a user's experience, so when designing Quantum, this was taken into account. Quantum comes with 8 distinctive themes that are sure to appeal to a number of users.
 - Birds of Paradise
